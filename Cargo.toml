@@ -1,0 +1,12 @@
+[workspace]
+
+members = [
+    "display-interface-traits",
+    "spi",
+    "i2c",
+]
+
+[patch.crates-io]
+display-interface-traits = { path = "display-interface-traits" }
+display-interface-spi = { path = "spi" }
+display-interface-i2c = { path = "i2c" }
