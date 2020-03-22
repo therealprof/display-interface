@@ -1,12 +1,31 @@
+[package]
+name = "display-interface"
+description = "Traits for interfaces used to drive displays"
+version = "0.1.0"
+authors = ["Daniel Egger <daniel@eggers-club.de>"]
+repository = "https://github.com/therealprof/display-interface-traits"
+documentation = "https://docs.rs/embedded-graphics"
+categories = ["no-std"]
+keywords = ["graphics", "display", "embedded"]
+readme = "./README.md"
+license = "MIT OR Apache-2.0"
+exclude = [
+	".gitignore",
+]
+edition = "2018"
+
+[package.metadata.docs.rs]
+all-features = true
+
 [workspace]
 
 members = [
-    "display-interface-traits",
+    ".",
     "spi",
     "i2c",
 ]
 
 [patch.crates-io]
-display-interface-traits = { path = "display-interface-traits" }
+display-interface = { path = "." }
 display-interface-spi = { path = "spi" }
 display-interface-i2c = { path = "i2c" }

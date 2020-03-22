@@ -3,7 +3,7 @@
 //! Generic I2C interface for display drivers
 use embedded_hal as hal;
 
-use display_interface_traits::WriteOnlyDataCommand;
+use display_interface::WriteOnlyDataCommand;
 
 /// I2C communication interface
 pub struct I2CInterface<I2C> {

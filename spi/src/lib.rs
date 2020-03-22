@@ -4,7 +4,7 @@
 use embedded_hal as hal;
 use hal::digital::v2::OutputPin;
 
-use display_interface_traits::WriteOnlyDataCommand;
+use display_interface::WriteOnlyDataCommand;
 
 /// SPI display interface.
 ///

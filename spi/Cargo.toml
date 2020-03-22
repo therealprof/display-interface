@@ -20,5 +20,5 @@ all-features = true
 [dependencies]
 embedded-hal = "0.2.3"
 
-[dependencies.display-interface-traits]
+[dependencies.display-interface]
 version = "0.1.0"
