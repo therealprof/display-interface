@@ -12,7 +12,7 @@ use display_interface::WriteOnlyDataCommand;
 pub struct SPIInterface<SPI, DC, CS> {
     spi: SPI,
     dc: DC,
-    cs: CS,
+    cs: Option<CS>,
 }
 
 impl<SPI, DC, CS> SPIInterface<SPI, DC, CS>
@@ -22,7 +22,7 @@ where
     CS: OutputPin,
 {
     /// Create new SPI interface for communication with a display driver
-    pub fn new(spi: SPI, dc: DC, cs: CS) -> Self {
+    pub fn new(spi: SPI, dc: DC, cs: Option<CS>) -> Self {
         Self { spi, dc, cs }
     }
 }
@@ -36,13 +36,17 @@ where
     type Error = SPI::Error;
 
     fn send_commands(&mut self, cmds: &[u8]) -> Result<(), Self::Error> {
-        self.dc.set_low().and_then(|_| Ok(self.cs.set_low()));
+        self.dc
+            .set_low()
+            .and_then(|_| Ok(self.cs.as_mut().map(|mut pin| pin.set_low())));
         self.spi.write(&cmds)
     }
 
     fn send_data(&mut self, buf: &[u8]) -> Result<(), Self::Error> {
         // 1 = data, 0 = command
-        self.dc.set_high().and_then(|_| Ok(self.cs.set_low()));
+        self.dc
+            .set_high()
+            .and_then(|_| Ok(self.cs.as_mut().map(|mut pin| pin.set_low())));
 
         self.spi.write(&buf)
     }
