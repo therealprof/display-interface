@@ -1,13 +1,13 @@
 [package]
 name = "display-interface"
 description = "Traits for interfaces used to drive displays"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Daniel Egger <daniel@eggers-club.de>"]
-repository = "https://github.com/therealprof/display-interface-traits"
-documentation = "https://docs.rs/embedded-graphics"
+repository = "https://github.com/therealprof/display-interface"
+documentation = "https://docs.rs/display-interface"
 categories = ["no-std"]
 keywords = ["graphics", "display", "embedded"]
-readme = "./README.md"
+readme = "README.md"
 license = "MIT OR Apache-2.0"
 exclude = [
 	".gitignore",
