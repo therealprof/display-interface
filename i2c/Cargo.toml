@@ -3,11 +3,11 @@ name = "display-interface-i2c"
 description = "Generic I2C implementation for display interfaces"
 version = "0.1.0"
 authors = ["Daniel Egger <daniel@eggers-club.de>"]
-repository = "https://github.com/therealprof/display-interface-traits"
-documentation = "https://docs.rs/embedded-graphics"
+repository = "https://github.com/therealprof/display-interface"
+documentation = "https://docs.rs/isplay-interface-i2c"
 categories = ["no-std"]
 keywords = ["graphics", "display", "embedded"]
-readme = "./README.md"
+readme = "README.md"
 license = "MIT OR Apache-2.0"
 exclude = [
 	".gitignore",
@@ -21,4 +21,4 @@ all-features = true
 embedded-hal = "0.2.3"
 
 [dependencies.display-interface]
-version = "0.1.0"
+version = "0.1"
