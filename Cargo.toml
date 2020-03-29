@@ -26,6 +26,5 @@ members = [
 ]
 
 [patch.crates-io]
-display-interface = { path = "." }
 display-interface-spi = { path = "spi" }
 display-interface-i2c = { path = "i2c" }
