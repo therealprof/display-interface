@@ -4,7 +4,7 @@
 use embedded_hal as hal;
 use hal::digital::v2::OutputPin;
 
-use display_interface::WriteOnlyDataCommand;
+use display_interface::{DisplayError, WriteOnlyDataCommand};
 
 /// SPI display interface.
 ///
@@ -33,18 +33,28 @@ where
     DC: OutputPin,
     CS: OutputPin,
 {
-    type Error = SPI::Error;
-
-    fn send_commands(&mut self, cmds: &[u8]) -> Result<(), Self::Error> {
-        self.dc.set_low().and_then(|_| Ok(self.cs.set_low()));
-        self.spi.write(&cmds)
+    fn send_commands(&mut self, cmds: &[u8]) -> Result<(), DisplayError> {
+        self.cs.set_low().map_err(|_| DisplayError::CSError)?;
+        // 1 = data, 0 = command
+        self.dc.set_low().map_err(|_| DisplayError::DCError)?;
+        let err = self
+            .spi
+            .write(&cmds)
+            .map_err(|_| DisplayError::BusWriteError);
+        self.cs.set_high().ok();
+        err
     }
 
-    fn send_data(&mut self, buf: &[u8]) -> Result<(), Self::Error> {
+    fn send_data(&mut self, buf: &[u8]) -> Result<(), DisplayError> {
+        self.cs.set_low().map_err(|_| DisplayError::CSError)?;
         // 1 = data, 0 = command
-        self.dc.set_high().and_then(|_| Ok(self.cs.set_low()));
-
-        self.spi.write(&buf)
+        self.dc.set_high().map_err(|_| DisplayError::DCError)?;
+        let err = self
+            .spi
+            .write(&buf)
+            .map_err(|_| DisplayError::BusWriteError);
+        self.cs.set_high().ok();
+        err
     }
 }
 
@@ -72,16 +82,19 @@ where
     SPI: hal::blocking::spi::Write<u8>,
     DC: OutputPin,
 {
-    type Error = SPI::Error;
-
-    fn send_commands(&mut self, cmds: &[u8]) -> Result<(), Self::Error> {
-        self.dc.set_low();
-        self.spi.write(&cmds)
+    fn send_commands(&mut self, cmds: &[u8]) -> Result<(), DisplayError> {
+        // 1 = data, 0 = command
+        self.dc.set_low().map_err(|_| DisplayError::DCError)?;
+        self.spi
+            .write(&cmds)
+            .map_err(|_| DisplayError::BusWriteError)
     }
 
-    fn send_data(&mut self, buf: &[u8]) -> Result<(), Self::Error> {
+    fn send_data(&mut self, buf: &[u8]) -> Result<(), DisplayError> {
         // 1 = data, 0 = command
-        self.dc.set_high();
-        self.spi.write(&buf)
+        self.dc.set_high().map_err(|_| DisplayError::DCError)?;
+        self.spi
+            .write(&buf)
+            .map_err(|_| DisplayError::BusWriteError)
     }
 }

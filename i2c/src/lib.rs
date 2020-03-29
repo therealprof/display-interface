@@ -3,7 +3,7 @@
 //! Generic I2C interface for display drivers
 use embedded_hal as hal;
 
-use display_interface::WriteOnlyDataCommand;
+use display_interface::{DisplayError, WriteOnlyDataCommand};
 
 /// I2C communication interface
 pub struct I2CInterface<I2C> {
@@ -30,17 +30,17 @@ impl<I2C> WriteOnlyDataCommand for I2CInterface<I2C>
 where
     I2C: hal::blocking::i2c::Write,
 {
-    type Error = I2C::Error;
-
-    fn send_commands(&mut self, cmds: &[u8]) -> Result<(), Self::Error> {
+    fn send_commands(&mut self, cmds: &[u8]) -> Result<(), DisplayError> {
         // Copy over given commands to new aray to prefix with command identifier
         let mut writebuf: [u8; 8] = [0; 8];
         writebuf[1..=cmds.len()].copy_from_slice(&cmds[0..cmds.len()]);
 
-        self.i2c.write(self.addr, &writebuf[..=cmds.len()])
+        self.i2c
+            .write(self.addr, &writebuf[..=cmds.len()])
+            .map_err(|_| DisplayError::BusWriteError)
     }
 
-    fn send_data(&mut self, buf: &[u8]) -> Result<(), Self::Error> {
+    fn send_data(&mut self, buf: &[u8]) -> Result<(), DisplayError> {
         // No-op if the data buffer is empty
         if buf.is_empty() {
             return Ok(());
@@ -51,13 +51,15 @@ where
         // Data mode
         writebuf[0] = self.data_byte;
 
-        buf.chunks(16).try_for_each(|c| {
-            let chunk_len = c.len();
+        buf.chunks(16)
+            .try_for_each(|c| {
+                let chunk_len = c.len();
 
-            // Copy over all data from buffer, leaving the data command byte intact
-            writebuf[1..=chunk_len].copy_from_slice(c);
+                // Copy over all data from buffer, leaving the data command byte intact
+                writebuf[1..=chunk_len].copy_from_slice(c);
 
-            self.i2c.write(self.addr, &writebuf[0..=chunk_len])
-        })
+                self.i2c.write(self.addr, &writebuf[0..=chunk_len])
+            })
+            .map_err(|_| DisplayError::BusWriteError)
     }
 }
