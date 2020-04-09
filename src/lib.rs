@@ -22,10 +22,10 @@ pub enum DisplayError {
 /// This trait implements a write-only interface for a display which has separate data and command
 /// modes. It is the responsibility of implementations to activate the correct mode in their
 /// implementation when corresponding method is called.
-pub trait WriteOnlyDataCommand {
+pub trait WriteOnlyDataCommand<WIDTH> {
     /// Send a batch of commands to display
-    fn send_commands(&mut self, cmd: &[u8]) -> Result<(), DisplayError>;
+    fn send_commands(&mut self, cmd: &[WIDTH]) -> Result<(), DisplayError>;
 
     /// Send pixel data to display
-    fn send_data(&mut self, buf: &[u8]) -> Result<(), DisplayError>;
+    fn send_data(&mut self, buf: &[WIDTH]) -> Result<(), DisplayError>;
 }

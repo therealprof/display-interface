@@ -26,7 +26,7 @@ where
     }
 }
 
-impl<I2C> WriteOnlyDataCommand for I2CInterface<I2C>
+impl<I2C> WriteOnlyDataCommand<u8> for I2CInterface<I2C>
 where
     I2C: hal::blocking::i2c::Write,
 {
