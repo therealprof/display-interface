@@ -7,6 +7,8 @@
 //! to drive a display and allows a driver writer to focus on driving the display itself and only
 //! have to implement a single interface.
 
+pub mod prelude;
+
 /// A ubiquitous error type for all kinds of problems which could happen when communicating with a
 /// display
 #[derive(Clone, Debug)]
