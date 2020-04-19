@@ -1,10 +1,10 @@
 [package]
-name = "display-interface"
-description = "Traits for interfaces used to drive displays"
-version = "0.2.1"
+name = "display-interface-parallel-gpio"
+description = "Generic parallel GPIO interface for display interfaces"
+version = "0.1.0"
 authors = ["Daniel Egger <daniel@eggers-club.de>"]
 repository = "https://github.com/therealprof/display-interface"
-documentation = "https://docs.rs/display-interface"
+documentation = "https://docs.rs/display-interface-parallel-gpio"
 categories = ["no-std"]
 keywords = ["graphics", "display", "embedded"]
 readme = "README.md"
@@ -17,11 +17,6 @@ edition = "2018"
 [package.metadata.docs.rs]
 all-features = true
 
-[workspace]
-
-members = [
-    ".",
-    "i2c",
-    "parallel-gpio",
-    "spi",
-]
+[dependencies]
+embedded-hal = "0.2.3"
+display-interface = "0.2"
