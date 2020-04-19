@@ -19,4 +19,4 @@ all-features = true
 
 [dependencies]
 embedded-hal = "0.2.3"
-display-interface = { version = "0.2", path = ".." }
+display-interface = "0.2"
