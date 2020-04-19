@@ -1,0 +1,18 @@
+[package]
+name = "parallel-st7789"
+version = "0.1.0"
+authors = ["Nicolas Stalder <n@stalder.io>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[workspace]
+
+[dependencies]
+cortex-m = "0.6.2"
+cortex-m-rt = "0.6.12"
+display-interface-parallel-gpio = { path = "../parallel-gpio" }
+embedded-graphics = "0.6.1"
+panic-halt = "0.2.0"
+st7789 = { git = "https://github.com/therealprof/st7789", branch = "display-interface" }
+stm32f0xx-hal = { git = "https://github.com/stm32-rs/stm32f0xx-hal", features = ["rt", "stm32f071"] }
