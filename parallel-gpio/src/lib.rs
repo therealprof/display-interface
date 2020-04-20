@@ -77,6 +77,13 @@ where
 
     fn set_value(self: &mut Self, value: u8) -> Result<(), DisplayError> {
         let changed = value ^ self.last;
+
+        // It's quite common for multiple consecutive values to be identical, e.g. when filling or
+        // clearing the screen, so let's optimize for that case
+        if changed == 0 {
+            return Ok(());
+        }
+
         self.last = value;
 
         if changed & 1 != 0 {
