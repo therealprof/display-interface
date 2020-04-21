@@ -1,7 +1,7 @@
 [package]
 name = "display-interface-parallel-gpio"
 description = "Generic parallel GPIO interface for display interfaces"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Daniel Egger <daniel@eggers-club.de>"]
 repository = "https://github.com/therealprof/display-interface"
 documentation = "https://docs.rs/display-interface-parallel-gpio"
