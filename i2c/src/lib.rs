@@ -26,10 +26,12 @@ where
     }
 }
 
-impl<I2C> WriteOnlyDataCommand<u8> for I2CInterface<I2C>
+impl<I2C> WriteOnlyDataCommand for I2CInterface<I2C>
 where
     I2C: hal::blocking::i2c::Write,
 {
+    type Width = u8;
+
     fn send_commands(&mut self, cmds: &[u8]) -> Result<(), DisplayError> {
         // Copy over given commands to new aray to prefix with command identifier
         let mut writebuf: [u8; 8] = [0; 8];

@@ -1,7 +1,7 @@
 [package]
 name = "display-interface"
 description = "Traits for interfaces used to drive displays"
-version = "0.2.1"
+version = "0.3.0"
 authors = ["Daniel Egger <daniel@eggers-club.de>"]
 repository = "https://github.com/therealprof/display-interface"
 documentation = "https://docs.rs/display-interface"
