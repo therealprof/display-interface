@@ -5,7 +5,7 @@
 use embedded_hal as hal;
 use hal::digital::v2::OutputPin;
 
-use display_interface::{DisplayError, WriteOnlyDataCommand};
+use display_interface::{DisplayError, WriteOnlyDataCommand, DataFormat};
 
 /// SPI display interface.
 ///
@@ -34,30 +34,38 @@ where
     DC: OutputPin,
     CS: OutputPin,
 {
-    type Width = u8;
-
-    fn send_commands(&mut self, cmds: &[Self::Width]) -> Result<(), DisplayError> {
-        self.cs.set_low().map_err(|_| DisplayError::CSError)?;
-        // 1 = data, 0 = command
-        self.dc.set_low().map_err(|_| DisplayError::DCError)?;
-        let err = self
-            .spi
-            .write(&cmds)
-            .map_err(|_| DisplayError::BusWriteError);
-        self.cs.set_high().ok();
-        err
+    fn send_commands<'a>(&mut self, cmds: DataFormat<'a>) -> Result<(), DisplayError> {
+        match cmds {
+            DataFormat::U8(iter) => {
+                self.cs.set_low().map_err(|_| DisplayError::CSError)?;
+                // 1 = data, 0 = command
+                self.dc.set_low().map_err(|_| DisplayError::DCError)?;
+                let err = self
+                    .spi
+                    .write(iter.as_slice())
+                    .map_err(|_| DisplayError::BusWriteError);
+                self.cs.set_high().ok();
+                err
+            },
+            _ => Err(DisplayError::BusWriteError)
+        }
     }
 
-    fn send_data(&mut self, buf: &[Self::Width]) -> Result<(), DisplayError> {
-        self.cs.set_low().map_err(|_| DisplayError::CSError)?;
-        // 1 = data, 0 = command
-        self.dc.set_high().map_err(|_| DisplayError::DCError)?;
-        let err = self
-            .spi
-            .write(&buf)
-            .map_err(|_| DisplayError::BusWriteError);
-        self.cs.set_high().ok();
-        err
+    fn send_data<'a>(&mut self, buf: DataFormat<'a>) -> Result<(), DisplayError> {
+        match buf {
+            DataFormat::U8(iter) => {
+                self.cs.set_low().map_err(|_| DisplayError::CSError)?;
+                // 1 = data, 0 = command
+                self.dc.set_high().map_err(|_| DisplayError::DCError)?;
+                let err = self
+                    .spi
+                    .write(iter.as_slice())
+                    .map_err(|_| DisplayError::BusWriteError);
+                self.cs.set_high().ok();
+                err
+            },
+            _ => Err(DisplayError::BusWriteError)
+        }
     }
 }
 
@@ -85,21 +93,29 @@ where
     SPI: hal::blocking::spi::Write<u8>,
     DC: OutputPin,
 {
-    type Width = u8;
-
-    fn send_commands(&mut self, cmds: &[Self::Width]) -> Result<(), DisplayError> {
-        // 1 = data, 0 = command
-        self.dc.set_low().map_err(|_| DisplayError::DCError)?;
-        self.spi
-            .write(&cmds)
-            .map_err(|_| DisplayError::BusWriteError)
+    fn send_commands<'a>(&mut self, cmds: DataFormat<'a>) -> Result<(), DisplayError> {
+        match cmds {
+            DataFormat::U8(iter) => {
+                // 1 = data, 0 = command
+                self.dc.set_low().map_err(|_| DisplayError::DCError)?;
+                self.spi
+                    .write(iter.as_slice())
+                    .map_err(|_| DisplayError::BusWriteError)
+            },
+            _ => Err(DisplayError::BusWriteError)
+        }
     }
 
-    fn send_data(&mut self, buf: &[Self::Width]) -> Result<(), DisplayError> {
-        // 1 = data, 0 = command
-        self.dc.set_high().map_err(|_| DisplayError::DCError)?;
-        self.spi
-            .write(&buf)
-            .map_err(|_| DisplayError::BusWriteError)
+    fn send_data<'a>(&mut self, buf: DataFormat<'a>) -> Result<(), DisplayError> {
+        match buf {
+            DataFormat::U8(iter) => {
+                // 1 = data, 0 = command
+                self.dc.set_high().map_err(|_| DisplayError::DCError)?;
+                self.spi
+                    .write(iter.as_slice())
+                    .map_err(|_| DisplayError::BusWriteError)
+            },
+            _ => Err(DisplayError::BusWriteError)
+        }
     }
 }
