@@ -36,13 +36,13 @@ where
 {
     fn send_commands(&mut self, cmds: DataFormat<'_>) -> Result<(), DisplayError> {
         match cmds {
-            DataFormat::U8(iter) => {
+            DataFormat::U8(slice) => {
                 self.cs.set_low().map_err(|_| DisplayError::CSError)?;
                 // 1 = data, 0 = command
                 self.dc.set_low().map_err(|_| DisplayError::DCError)?;
                 let err = self
                     .spi
-                    .write(iter.as_slice())
+                    .write(slice)
                     .map_err(|_| DisplayError::BusWriteError);
                 self.cs.set_high().ok();
                 err
@@ -53,13 +53,13 @@ where
 
     fn send_data(&mut self, buf: DataFormat<'_>) -> Result<(), DisplayError> {
         match buf {
-            DataFormat::U8(iter) => {
+            DataFormat::U8(slice) => {
                 self.cs.set_low().map_err(|_| DisplayError::CSError)?;
                 // 1 = data, 0 = command
                 self.dc.set_high().map_err(|_| DisplayError::DCError)?;
                 let err = self
                     .spi
-                    .write(iter.as_slice())
+                    .write(slice)
                     .map_err(|_| DisplayError::BusWriteError);
                 self.cs.set_high().ok();
                 err
@@ -95,11 +95,11 @@ where
 {
     fn send_commands(&mut self, cmds: DataFormat<'_>) -> Result<(), DisplayError> {
         match cmds {
-            DataFormat::U8(iter) => {
+            DataFormat::U8(slice) => {
                 // 1 = data, 0 = command
                 self.dc.set_low().map_err(|_| DisplayError::DCError)?;
                 self.spi
-                    .write(iter.as_slice())
+                    .write(slice)
                     .map_err(|_| DisplayError::BusWriteError)
             }
             _ => Err(DisplayError::BusWriteError),
@@ -108,11 +108,11 @@ where
 
     fn send_data(&mut self, buf: DataFormat<'_>) -> Result<(), DisplayError> {
         match buf {
-            DataFormat::U8(iter) => {
+            DataFormat::U8(slice) => {
                 // 1 = data, 0 = command
                 self.dc.set_high().map_err(|_| DisplayError::DCError)?;
                 self.spi
-                    .write(iter.as_slice())
+                    .write(slice)
                     .map_err(|_| DisplayError::BusWriteError)
             }
             _ => Err(DisplayError::BusWriteError),

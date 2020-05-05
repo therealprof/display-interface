@@ -33,13 +33,12 @@ where
     fn send_commands(&mut self, cmds: DataFormat<'_>) -> Result<(), DisplayError> {
         // Copy over given commands to new aray to prefix with command identifier
         match cmds {
-            DataFormat::U8(iter) => {
+            DataFormat::U8(slice) => {
                 let mut writebuf: [u8; 8] = [0; 8];
-                let sliced = iter.as_slice();
-                writebuf[1..=sliced.len()].copy_from_slice(&sliced[0..sliced.len()]);
+                writebuf[1..=slice.len()].copy_from_slice(&slice[0..slice.len()]);
 
                 self.i2c
-                    .write(self.addr, &writebuf[..=sliced.len()])
+                    .write(self.addr, &writebuf[..=slice.len()])
                     .map_err(|_| DisplayError::BusWriteError)
             }
             _ => Err(DisplayError::BusWriteError), // TODO: support u16
@@ -48,9 +47,8 @@ where
 
     fn send_data(&mut self, buf: DataFormat<'_>) -> Result<(), DisplayError> {
         match buf {
-            DataFormat::U8(iter) => {
+            DataFormat::U8(slice) => {
                 // No-op if the data buffer is empty
-                let slice = iter.as_slice();
                 if slice.is_empty() {
                     return Ok(());
                 }
