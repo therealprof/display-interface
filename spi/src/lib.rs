@@ -47,7 +47,7 @@ where
                 self.cs.set_high().ok();
                 err
             }
-            _ => Err(DisplayError::BusWriteError),
+            _ => Err(DisplayError::InvalidFormatError), // TODO: support u16
         }
     }
 
@@ -64,7 +64,7 @@ where
                 self.cs.set_high().ok();
                 err
             }
-            _ => Err(DisplayError::BusWriteError),
+            _ => Err(DisplayError::InvalidFormatError), // TODO: support u16
         }
     }
 }
@@ -102,7 +102,7 @@ where
                     .write(slice)
                     .map_err(|_| DisplayError::BusWriteError)
             }
-            _ => Err(DisplayError::BusWriteError),
+            _ => Err(DisplayError::InvalidFormatError), // TODO: support u16
         }
     }
 
@@ -115,7 +115,7 @@ where
                     .write(slice)
                     .map_err(|_| DisplayError::BusWriteError)
             }
-            _ => Err(DisplayError::BusWriteError),
+            _ => Err(DisplayError::InvalidFormatError), // TODO: support u16
         }
     }
 }

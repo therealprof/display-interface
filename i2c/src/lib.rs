@@ -41,7 +41,7 @@ where
                     .write(self.addr, &writebuf[..=slice.len()])
                     .map_err(|_| DisplayError::BusWriteError)
             }
-            _ => Err(DisplayError::BusWriteError), // TODO: support u16
+            _ => Err(DisplayError::InvalidFormatError), // TODO: support u16
         }
     }
 
@@ -70,7 +70,7 @@ where
                     })
                     .map_err(|_| DisplayError::BusWriteError)
             }
-            _ => Err(DisplayError::BusWriteError), // TODO: support u16
+            _ => Err(DisplayError::InvalidFormatError), // TODO: support u16
         }
     }
 }

@@ -13,6 +13,8 @@ pub mod prelude;
 /// display
 #[derive(Clone, Debug)]
 pub enum DisplayError {
+    /// Invalid transfer format selected (e.g. u16 on u8 interface)
+    InvalidFormatError,
     /// Unable to write to bus
     BusWriteError,
     /// Unable to assert or de-assert data/command switching signal
