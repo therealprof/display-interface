@@ -5,7 +5,7 @@
 use embedded_hal as hal;
 use hal::digital::v2::OutputPin;
 
-use display_interface::{DisplayError, WriteOnlyDataCommand, DataFormat};
+use display_interface::{DataFormat, DisplayError, WriteOnlyDataCommand};
 
 /// SPI display interface.
 ///
@@ -34,7 +34,7 @@ where
     DC: OutputPin,
     CS: OutputPin,
 {
-    fn send_commands<'a>(&mut self, cmds: DataFormat<'a>) -> Result<(), DisplayError> {
+    fn send_commands(&mut self, cmds: DataFormat<'_>) -> Result<(), DisplayError> {
         match cmds {
             DataFormat::U8(iter) => {
                 self.cs.set_low().map_err(|_| DisplayError::CSError)?;
@@ -46,12 +46,12 @@ where
                     .map_err(|_| DisplayError::BusWriteError);
                 self.cs.set_high().ok();
                 err
-            },
-            _ => Err(DisplayError::BusWriteError)
+            }
+            _ => Err(DisplayError::BusWriteError),
         }
     }
 
-    fn send_data<'a>(&mut self, buf: DataFormat<'a>) -> Result<(), DisplayError> {
+    fn send_data(&mut self, buf: DataFormat<'_>) -> Result<(), DisplayError> {
         match buf {
             DataFormat::U8(iter) => {
                 self.cs.set_low().map_err(|_| DisplayError::CSError)?;
@@ -63,8 +63,8 @@ where
                     .map_err(|_| DisplayError::BusWriteError);
                 self.cs.set_high().ok();
                 err
-            },
-            _ => Err(DisplayError::BusWriteError)
+            }
+            _ => Err(DisplayError::BusWriteError),
         }
     }
 }
@@ -93,7 +93,7 @@ where
     SPI: hal::blocking::spi::Write<u8>,
     DC: OutputPin,
 {
-    fn send_commands<'a>(&mut self, cmds: DataFormat<'a>) -> Result<(), DisplayError> {
+    fn send_commands(&mut self, cmds: DataFormat<'_>) -> Result<(), DisplayError> {
         match cmds {
             DataFormat::U8(iter) => {
                 // 1 = data, 0 = command
@@ -101,12 +101,12 @@ where
                 self.spi
                     .write(iter.as_slice())
                     .map_err(|_| DisplayError::BusWriteError)
-            },
-            _ => Err(DisplayError::BusWriteError)
+            }
+            _ => Err(DisplayError::BusWriteError),
         }
     }
 
-    fn send_data<'a>(&mut self, buf: DataFormat<'a>) -> Result<(), DisplayError> {
+    fn send_data(&mut self, buf: DataFormat<'_>) -> Result<(), DisplayError> {
         match buf {
             DataFormat::U8(iter) => {
                 // 1 = data, 0 = command
@@ -114,8 +114,8 @@ where
                 self.spi
                     .write(iter.as_slice())
                     .map_err(|_| DisplayError::BusWriteError)
-            },
-            _ => Err(DisplayError::BusWriteError)
+            }
+            _ => Err(DisplayError::BusWriteError),
         }
     }
 }

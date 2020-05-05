@@ -3,7 +3,7 @@
 //! Generic I2C interface for display drivers
 use embedded_hal as hal;
 
-use display_interface::{DisplayError, WriteOnlyDataCommand, DataFormat};
+use display_interface::{DataFormat, DisplayError, WriteOnlyDataCommand};
 
 /// I2C communication interface
 pub struct I2CInterface<I2C> {
@@ -30,24 +30,23 @@ impl<I2C> WriteOnlyDataCommand for I2CInterface<I2C>
 where
     I2C: hal::blocking::i2c::Write,
 {
-    fn send_commands<'a>(&mut self, cmds: DataFormat<'a>) -> Result<(), DisplayError> {
+    fn send_commands(&mut self, cmds: DataFormat<'_>) -> Result<(), DisplayError> {
         // Copy over given commands to new aray to prefix with command identifier
         match cmds {
             DataFormat::U8(iter) => {
                 let mut writebuf: [u8; 8] = [0; 8];
                 let sliced = iter.as_slice();
                 writebuf[1..=sliced.len()].copy_from_slice(&sliced[0..sliced.len()]);
-        
+
                 self.i2c
                     .write(self.addr, &writebuf[..=sliced.len()])
                     .map_err(|_| DisplayError::BusWriteError)
-            },
+            }
             _ => Err(DisplayError::BusWriteError), // TODO: support u16
         }
-
     }
 
-    fn send_data<'a>(&mut self, buf: DataFormat<'a>) -> Result<(), DisplayError> {
+    fn send_data(&mut self, buf: DataFormat<'_>) -> Result<(), DisplayError> {
         match buf {
             DataFormat::U8(iter) => {
                 // No-op if the data buffer is empty
@@ -61,7 +60,8 @@ where
                 // Data mode
                 writebuf[0] = self.data_byte;
 
-                slice.chunks(16)
+                slice
+                    .chunks(16)
                     .try_for_each(|c| {
                         let chunk_len = c.len();
 
@@ -71,7 +71,7 @@ where
                         self.i2c.write(self.addr, &writebuf[0..=chunk_len])
                     })
                     .map_err(|_| DisplayError::BusWriteError)
-            },
+            }
             _ => Err(DisplayError::BusWriteError), // TODO: support u16
         }
     }

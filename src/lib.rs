@@ -57,8 +57,8 @@ impl<'a> From<&'a [u16]> for DataFormat<'a> {
 /// implementation when corresponding method is called.
 pub trait WriteOnlyDataCommand {
     /// Send a batch of commands to display
-    fn send_commands<'a>(&mut self, cmd: DataFormat<'a>) -> Result<(), DisplayError>;
+    fn send_commands(&mut self, cmd: DataFormat<'_>) -> Result<(), DisplayError>;
 
     /// Send pixel data to display
-    fn send_data<'a>(&mut self, buf: DataFormat<'a>) -> Result<(), DisplayError>;
+    fn send_data(&mut self, buf: DataFormat<'_>) -> Result<(), DisplayError>;
 }
