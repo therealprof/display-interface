@@ -21,6 +21,9 @@ pub enum DisplayError {
     CSError,
 }
 
+/// DI specific data format wrapper around slices of various widths
+/// Display drivers need to implement non-trivial conversions (e.g. with padding)
+/// as the hardware requires.
 pub enum DataFormat<'a> {
     U8(&'a [u8]),
     U16(&'a [u16]),
@@ -31,6 +34,7 @@ impl<'a> From<&'a [u8]> for DataFormat<'a> {
         Self::U8(arr_ref)
     }
 }
+
 impl<'a> From<&'a [u16]> for DataFormat<'a> {
     fn from(arr_ref: &'a [u16]) -> Self {
         Self::U16(arr_ref)
