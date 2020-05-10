@@ -7,6 +7,20 @@ use hal::digital::v2::OutputPin;
 
 use display_interface::{DataFormat, DisplayError, WriteOnlyDataCommand};
 
+fn send_u8<SPI: hal::blocking::spi::Write<u8>>(
+    spi: &mut SPI,
+    words: DataFormat<'_>,
+) -> Result<(), DisplayError> {
+    match words {
+        DataFormat::U8(slice) => spi.write(slice).map_err(|_| DisplayError::BusWriteError),
+        DataFormat::U16(slice) => {
+            use byte_slice_cast::*;
+            spi.write(slice.as_byte_slice())
+                .map_err(|_| DisplayError::BusWriteError)
+        }
+    }
+}
+
 /// SPI display interface.
 ///
 /// This combines the SPI peripheral and a data/command as well as a chip-select pin
@@ -35,37 +49,35 @@ where
     CS: OutputPin,
 {
     fn send_commands(&mut self, cmds: DataFormat<'_>) -> Result<(), DisplayError> {
-        match cmds {
-            DataFormat::U8(slice) => {
-                self.cs.set_low().map_err(|_| DisplayError::CSError)?;
-                // 1 = data, 0 = command
-                self.dc.set_low().map_err(|_| DisplayError::DCError)?;
-                let err = self
-                    .spi
-                    .write(slice)
-                    .map_err(|_| DisplayError::BusWriteError);
-                self.cs.set_high().ok();
-                err
-            }
-            _ => Err(DisplayError::InvalidFormatError), // TODO: support u16
-        }
+        // Assert chip select pin
+        self.cs.set_low().map_err(|_| DisplayError::CSError)?;
+
+        // 1 = data, 0 = command
+        self.dc.set_low().map_err(|_| DisplayError::DCError)?;
+
+        // Send words over SPI
+        let err = send_u8(&mut self.spi, cmds);
+
+        // Deassert chip select pin
+        self.cs.set_high().ok();
+
+        err
     }
 
     fn send_data(&mut self, buf: DataFormat<'_>) -> Result<(), DisplayError> {
-        match buf {
-            DataFormat::U8(slice) => {
-                self.cs.set_low().map_err(|_| DisplayError::CSError)?;
-                // 1 = data, 0 = command
-                self.dc.set_high().map_err(|_| DisplayError::DCError)?;
-                let err = self
-                    .spi
-                    .write(slice)
-                    .map_err(|_| DisplayError::BusWriteError);
-                self.cs.set_high().ok();
-                err
-            }
-            _ => Err(DisplayError::InvalidFormatError), // TODO: support u16
-        }
+        // Assert chip select pin
+        self.cs.set_low().map_err(|_| DisplayError::CSError)?;
+
+        // 1 = data, 0 = command
+        self.dc.set_high().map_err(|_| DisplayError::DCError)?;
+
+        // Send words over SPI
+        let err = send_u8(&mut self.spi, buf);
+
+        // Deassert chip select pin
+        self.cs.set_high().ok();
+
+        err
     }
 }
 
@@ -94,28 +106,18 @@ where
     DC: OutputPin,
 {
     fn send_commands(&mut self, cmds: DataFormat<'_>) -> Result<(), DisplayError> {
-        match cmds {
-            DataFormat::U8(slice) => {
-                // 1 = data, 0 = command
-                self.dc.set_low().map_err(|_| DisplayError::DCError)?;
-                self.spi
-                    .write(slice)
-                    .map_err(|_| DisplayError::BusWriteError)
-            }
-            _ => Err(DisplayError::InvalidFormatError), // TODO: support u16
-        }
+        // 1 = data, 0 = command
+        self.dc.set_low().map_err(|_| DisplayError::DCError)?;
+
+        // Send words over SPI
+        send_u8(&mut self.spi, cmds)
     }
 
     fn send_data(&mut self, buf: DataFormat<'_>) -> Result<(), DisplayError> {
-        match buf {
-            DataFormat::U8(slice) => {
-                // 1 = data, 0 = command
-                self.dc.set_high().map_err(|_| DisplayError::DCError)?;
-                self.spi
-                    .write(slice)
-                    .map_err(|_| DisplayError::BusWriteError)
-            }
-            _ => Err(DisplayError::InvalidFormatError), // TODO: support u16
-        }
+        // 1 = data, 0 = command
+        self.dc.set_high().map_err(|_| DisplayError::DCError)?;
+
+        // Send words over SPI
+        send_u8(&mut self.spi, buf)
     }
 }

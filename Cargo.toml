@@ -25,3 +25,7 @@ members = [
     "parallel-gpio",
     "spi",
 ]
+
+[patch.crates-io]
+display-interface = { version = "0.3", path = "." }
+
