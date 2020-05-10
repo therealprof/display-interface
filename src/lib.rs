@@ -23,33 +23,21 @@ pub enum DisplayError {
     CSError,
 }
 
-/// DI specific data format wrapper around slices of various widths
-/// Display drivers need to implement non-trivial conversions (e.g. with padding)
-/// as the hardware requires.
-pub enum DataFormat<'a> {
-    U8(&'a [u8]),
-    U16(&'a [u16]),
-}
-
-impl<'a> From<&'a [u8]> for DataFormat<'a> {
-    fn from(arr_ref: &'a [u8]) -> Self {
-        Self::U8(arr_ref)
-    }
-}
-
-impl<'a> From<&'a [u16]> for DataFormat<'a> {
-    fn from(arr_ref: &'a [u16]) -> Self {
-        Self::U16(arr_ref)
-    }
-}
-
 /// This trait implements a write-only interface for a display which has separate data and command
 /// modes. It is the responsibility of implementations to activate the correct mode in their
 /// implementation when corresponding method is called.
-pub trait WriteOnlyDataCommand {
+pub trait WriteOnlyDataCommand
+{
+    /// Width of the data type used for commands and data transfers
+    type Width: Copy;
+
     /// Send a batch of commands to display
-    fn send_commands(&mut self, cmd: DataFormat<'_>) -> Result<(), DisplayError>;
+    fn send_commands<S>(&mut self, cmd: S) -> Result<(), DisplayError>
+    where
+        S: IntoIterator<Item = Self::Width>;
 
     /// Send pixel data to display
-    fn send_data(&mut self, buf: DataFormat<'_>) -> Result<(), DisplayError>;
+    fn send_data<S>(&mut self, buf: S) -> Result<(), DisplayError>
+    where
+        S: IntoIterator<Item = Self::Width>;
 }

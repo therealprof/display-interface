@@ -5,7 +5,7 @@
 use embedded_hal as hal;
 use hal::digital::v2::OutputPin;
 
-use display_interface::{DataFormat, DisplayError, WriteOnlyDataCommand};
+use display_interface::{DisplayError, WriteOnlyDataCommand};
 
 /// SPI display interface.
 ///
@@ -18,7 +18,7 @@ pub struct SPIInterface<SPI, DC, CS> {
 
 impl<SPI, DC, CS> SPIInterface<SPI, DC, CS>
 where
-    SPI: hal::blocking::spi::Write<u8>,
+    SPI: hal::blocking::spi::WriteIter<u8>,
     DC: OutputPin,
     CS: OutputPin,
 {
@@ -30,42 +30,40 @@ where
 
 impl<SPI, DC, CS> WriteOnlyDataCommand for SPIInterface<SPI, DC, CS>
 where
-    SPI: hal::blocking::spi::Write<u8>,
+    SPI: hal::blocking::spi::WriteIter<u8>,
     DC: OutputPin,
     CS: OutputPin,
 {
-    fn send_commands(&mut self, cmds: DataFormat<'_>) -> Result<(), DisplayError> {
-        match cmds {
-            DataFormat::U8(slice) => {
-                self.cs.set_low().map_err(|_| DisplayError::CSError)?;
-                // 1 = data, 0 = command
-                self.dc.set_low().map_err(|_| DisplayError::DCError)?;
-                let err = self
-                    .spi
-                    .write(slice)
-                    .map_err(|_| DisplayError::BusWriteError);
-                self.cs.set_high().ok();
-                err
-            }
-            _ => Err(DisplayError::InvalidFormatError), // TODO: support u16
-        }
+    type Width = u8;
+
+    fn send_commands<S>(&mut self, cmds: S) -> Result<(), DisplayError>
+    where
+        S: IntoIterator<Item = Self::Width>,
+    {
+        self.cs.set_low().map_err(|_| DisplayError::CSError)?;
+        // 1 = data, 0 = command
+        self.dc.set_low().map_err(|_| DisplayError::DCError)?;
+        let err = self
+            .spi
+            .write_iter(cmds)
+            .map_err(|_| DisplayError::BusWriteError);
+        self.cs.set_high().ok();
+        err
     }
 
-    fn send_data(&mut self, buf: DataFormat<'_>) -> Result<(), DisplayError> {
-        match buf {
-            DataFormat::U8(slice) => {
-                self.cs.set_low().map_err(|_| DisplayError::CSError)?;
-                // 1 = data, 0 = command
-                self.dc.set_high().map_err(|_| DisplayError::DCError)?;
-                let err = self
-                    .spi
-                    .write(slice)
-                    .map_err(|_| DisplayError::BusWriteError);
-                self.cs.set_high().ok();
-                err
-            }
-            _ => Err(DisplayError::InvalidFormatError), // TODO: support u16
-        }
+    fn send_data<S>(&mut self, buf: S) -> Result<(), DisplayError>
+    where
+        S: IntoIterator<Item = Self::Width>,
+    {
+        self.cs.set_low().map_err(|_| DisplayError::CSError)?;
+        // 1 = data, 0 = command
+        self.dc.set_high().map_err(|_| DisplayError::DCError)?;
+        let err = self
+            .spi
+            .write_iter(buf)
+            .map_err(|_| DisplayError::BusWriteError);
+        self.cs.set_high().ok();
+        err
     }
 }
 
@@ -90,32 +88,30 @@ where
 
 impl<SPI, DC> WriteOnlyDataCommand for SPIInterfaceNoCS<SPI, DC>
 where
-    SPI: hal::blocking::spi::Write<u8>,
+    SPI: hal::blocking::spi::WriteIter<u8>, // TODO
     DC: OutputPin,
 {
-    fn send_commands(&mut self, cmds: DataFormat<'_>) -> Result<(), DisplayError> {
-        match cmds {
-            DataFormat::U8(slice) => {
-                // 1 = data, 0 = command
-                self.dc.set_low().map_err(|_| DisplayError::DCError)?;
-                self.spi
-                    .write(slice)
-                    .map_err(|_| DisplayError::BusWriteError)
-            }
-            _ => Err(DisplayError::InvalidFormatError), // TODO: support u16
-        }
+    type Width = u8;
+
+    fn send_commands<S>(&mut self, cmds: S) -> Result<(), DisplayError>
+    where
+        S: IntoIterator<Item = Self::Width>,
+    {
+        // 1 = data, 0 = command
+        self.dc.set_low().map_err(|_| DisplayError::DCError)?;
+        self.spi
+            .write_iter(cmds)
+            .map_err(|_| DisplayError::BusWriteError)
     }
 
-    fn send_data(&mut self, buf: DataFormat<'_>) -> Result<(), DisplayError> {
-        match buf {
-            DataFormat::U8(slice) => {
-                // 1 = data, 0 = command
-                self.dc.set_high().map_err(|_| DisplayError::DCError)?;
-                self.spi
-                    .write(slice)
-                    .map_err(|_| DisplayError::BusWriteError)
-            }
-            _ => Err(DisplayError::InvalidFormatError), // TODO: support u16
-        }
+    fn send_data<S>(&mut self, buf: S) -> Result<(), DisplayError>
+    where
+        S: IntoIterator<Item = Self::Width>,
+    {
+        // 1 = data, 0 = command
+        self.dc.set_high().map_err(|_| DisplayError::DCError)?;
+        self.spi
+            .write_iter(buf)
+            .map_err(|_| DisplayError::BusWriteError)
     }
 }

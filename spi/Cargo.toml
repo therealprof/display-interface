@@ -18,5 +18,5 @@ edition = "2018"
 all-features = true
 
 [dependencies]
-embedded-hal = "0.2.3"
+embedded-hal = { version = "0.2.3", features = ["unproven"] }
 display-interface = "0.3"
