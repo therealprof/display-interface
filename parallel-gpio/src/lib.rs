@@ -4,7 +4,7 @@
 
 use embedded_hal::digital::v2::OutputPin;
 
-pub use display_interface::{DisplayError, WriteOnlyDataCommand};
+pub use display_interface::{DataFormat, DisplayError, WriteOnlyDataCommand};
 
 /// Parallel 8 Bit communication interface
 ///
@@ -162,7 +162,7 @@ where
     }
 }
 
-impl<P0, P1, P2, P3, P4, P5, P6, P7, DC, WR> WriteOnlyDataCommand<u8>
+impl<P0, P1, P2, P3, P4, P5, P6, P7, DC, WR> WriteOnlyDataCommand
     for PGPIO8BitInterface<P0, P1, P2, P3, P4, P5, P6, P7, DC, WR>
 where
     P0: OutputPin,
@@ -176,23 +176,39 @@ where
     DC: OutputPin,
     WR: OutputPin,
 {
-    fn send_commands(&mut self, cmds: &[u8]) -> Result<(), DisplayError> {
+    fn send_commands(&mut self, cmds: DataFormat<'_>) -> Result<(), DisplayError> {
+        use byte_slice_cast::*;
         self.dc.set_low().map_err(|_| DisplayError::BusWriteError)?;
-        cmds.iter().try_for_each(|cmd| {
-            self.wr.set_low().map_err(|_| DisplayError::BusWriteError)?;
-            self.set_value(*cmd)?;
-            self.wr.set_high().map_err(|_| DisplayError::BusWriteError)
-        })
+        match cmds {
+            DataFormat::U8(slice) => slice.iter().try_for_each(|cmd| {
+                self.wr.set_low().map_err(|_| DisplayError::BusWriteError)?;
+                self.set_value(*cmd)?;
+                self.wr.set_high().map_err(|_| DisplayError::BusWriteError)
+            }),
+            DataFormat::U16(slice) => slice.as_byte_slice().iter().try_for_each(|cmd| {
+                self.wr.set_low().map_err(|_| DisplayError::BusWriteError)?;
+                self.set_value(*cmd)?;
+                self.wr.set_high().map_err(|_| DisplayError::BusWriteError)
+            }),
+        }
     }
 
-    fn send_data(&mut self, buf: &[u8]) -> Result<(), DisplayError> {
+    fn send_data(&mut self, buf: DataFormat<'_>) -> Result<(), DisplayError> {
+        use byte_slice_cast::*;
         self.dc
             .set_high()
             .map_err(|_| DisplayError::BusWriteError)?;
-        buf.iter().try_for_each(|d| {
-            self.wr.set_low().map_err(|_| DisplayError::BusWriteError)?;
-            self.set_value(*d)?;
-            self.wr.set_high().map_err(|_| DisplayError::BusWriteError)
-        })
+        match buf {
+            DataFormat::U8(slice) => slice.iter().try_for_each(|d| {
+                self.wr.set_low().map_err(|_| DisplayError::BusWriteError)?;
+                self.set_value(*d)?;
+                self.wr.set_high().map_err(|_| DisplayError::BusWriteError)
+            }),
+            DataFormat::U16(slice) => slice.as_byte_slice().iter().try_for_each(|d| {
+                self.wr.set_low().map_err(|_| DisplayError::BusWriteError)?;
+                self.set_value(*d)?;
+                self.wr.set_high().map_err(|_| DisplayError::BusWriteError)
+            }),
+        }
     }
 }
