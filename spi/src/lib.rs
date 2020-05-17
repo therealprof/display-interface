@@ -40,6 +40,12 @@ where
     pub fn new(spi: SPI, dc: DC, cs: CS) -> Self {
         Self { spi, dc, cs }
     }
+
+    /// Consume the display interface and return
+    /// the underlying peripherial driver and GPIO pins used by it
+    pub fn release(self) -> (SPI, DC, CS) {
+        (self.spi, self.dc, self.cs)
+    }
 }
 
 impl<SPI, DC, CS> WriteOnlyDataCommand for SPIInterface<SPI, DC, CS>
@@ -97,6 +103,12 @@ where
     /// Create new SPI interface for communciation with a display driver
     pub fn new(spi: SPI, dc: DC) -> Self {
         Self { spi, dc }
+    }
+
+    /// Consume the display interface and return
+    /// the underlying peripherial driver and GPIO pins used by it
+    pub fn release(self) -> (SPI, DC) {
+        (self.spi, self.dc)
     }
 }
 

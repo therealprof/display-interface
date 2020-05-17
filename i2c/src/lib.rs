@@ -24,6 +24,12 @@ where
             data_byte,
         }
     }
+
+    /// Consume the display interface and return
+    /// the underlying peripherial driver
+    pub fn release(self) -> I2C {
+        self.i2c
+    }
 }
 
 impl<I2C> WriteOnlyDataCommand for I2CInterface<I2C>
