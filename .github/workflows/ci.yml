@@ -1,0 +1,31 @@
+on:
+  push:
+    branches: [ staging, trying, master ]
+  pull_request:
+
+name: Continuous integration
+jobs:
+  clippy_check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+      - uses: actions-rs/cargo@v1
+        with:
+          command: build
+      - uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: --package display-interface-spi
+      - uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: --package display-interface-i2c
+      - uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: --package display-interface-parallel-gpio
