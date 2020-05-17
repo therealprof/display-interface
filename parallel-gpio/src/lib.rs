@@ -75,6 +75,23 @@ where
         }
     }
 
+    /// Consume the display interface and return
+    /// the GPIO pins used by it
+    pub fn release(self) -> (P0, P1, P2, P3, P4, P5, P6, P7, DC, WR) {
+        (
+            self.p0,
+            self.p1,
+            self.p2,
+            self.p3,
+            self.p4,
+            self.p5,
+            self.p6,
+            self.p7,
+            self.dc,
+            self.wr
+        )
+    }
+
     fn set_value(self: &mut Self, value: u8) -> Result<(), DisplayError> {
         let changed = value ^ self.last;
 
