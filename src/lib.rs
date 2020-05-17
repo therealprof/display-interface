@@ -53,3 +53,10 @@ pub trait WriteOnlyDataCommand {
     /// Send pixel data to display
     fn send_data(&mut self, buf: DataFormat<'_>) -> Result<(), DisplayError>;
 }
+
+/// Common trait that should be implemented by display interfaces.
+pub trait Deconstructable {
+    type Resources;
+
+    fn release(self) -> Self::Resources;
+}

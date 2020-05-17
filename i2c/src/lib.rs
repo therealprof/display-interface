@@ -3,7 +3,7 @@
 //! Generic I2C interface for display drivers
 use embedded_hal as hal;
 
-use display_interface::{DataFormat, DisplayError, WriteOnlyDataCommand};
+use display_interface::{DataFormat, DisplayError, WriteOnlyDataCommand, Deconstructable};
 
 /// I2C communication interface
 pub struct I2CInterface<I2C> {
@@ -24,10 +24,17 @@ where
             data_byte,
         }
     }
+}
+
+impl<I2C> Deconstructable for I2CInterface<I2C>
+where
+    I2C: hal::blocking::i2c::Write
+{
+    type Resources = I2C;
 
     /// Consume the display interface and return
     /// the underlying peripherial driver
-    pub fn release(self) -> I2C {
+    fn release(self) -> Self::Resources {
         self.i2c
     }
 }

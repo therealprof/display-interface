@@ -4,7 +4,7 @@
 
 use embedded_hal::digital::v2::OutputPin;
 
-pub use display_interface::{DataFormat, DisplayError, WriteOnlyDataCommand};
+pub use display_interface::{DataFormat, DisplayError, WriteOnlyDataCommand, Deconstructable};
 
 /// Parallel 8 Bit communication interface
 ///
@@ -73,23 +73,6 @@ where
             wr,
             last: 0,
         }
-    }
-
-    /// Consume the display interface and return
-    /// the GPIO pins used by it
-    pub fn release(self) -> (P0, P1, P2, P3, P4, P5, P6, P7, DC, WR) {
-        (
-            self.p0,
-            self.p1,
-            self.p2,
-            self.p3,
-            self.p4,
-            self.p5,
-            self.p6,
-            self.p7,
-            self.dc,
-            self.wr
-        )
     }
 
     fn set_value(self: &mut Self, value: u8) -> Result<(), DisplayError> {
@@ -176,6 +159,40 @@ where
         };
 
         Ok(())
+    }
+}
+
+impl<P0, P1, P2, P3, P4, P5, P6, P7, DC, WR> Deconstructable
+    for PGPIO8BitInterface<P0, P1, P2, P3, P4, P5, P6, P7, DC, WR>
+where
+    P0: OutputPin,
+    P1: OutputPin,
+    P2: OutputPin,
+    P3: OutputPin,
+    P4: OutputPin,
+    P5: OutputPin,
+    P6: OutputPin,
+    P7: OutputPin,
+    DC: OutputPin,
+    WR: OutputPin
+{
+    type Resources = (P0, P1, P2, P3, P4, P5, P6, P7, DC, WR);
+
+    /// Consume the display interface and return
+    /// the GPIO pins used by it
+    fn release(self) -> Self::Resources {
+        (
+            self.p0,
+            self.p1,
+            self.p2,
+            self.p3,
+            self.p4,
+            self.p5,
+            self.p6,
+            self.p7,
+            self.dc,
+            self.wr
+        )
     }
 }
 

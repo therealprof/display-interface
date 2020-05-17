@@ -5,7 +5,7 @@
 use embedded_hal as hal;
 use hal::digital::v2::OutputPin;
 
-use display_interface::{DataFormat, DisplayError, WriteOnlyDataCommand};
+use display_interface::{DataFormat, DisplayError, WriteOnlyDataCommand, Deconstructable};
 
 fn send_u8<SPI: hal::blocking::spi::Write<u8>>(
     spi: &mut SPI,
@@ -40,10 +40,19 @@ where
     pub fn new(spi: SPI, dc: DC, cs: CS) -> Self {
         Self { spi, dc, cs }
     }
+}
+
+impl<SPI, DC, CS> Deconstructable for SPIInterface<SPI, DC, CS>
+where
+    SPI: hal::blocking::spi::Write<u8>,
+    DC: OutputPin,
+    CS: OutputPin,
+{
+    type Resources = (SPI, DC, CS);
 
     /// Consume the display interface and return
     /// the underlying peripherial driver and GPIO pins used by it
-    pub fn release(self) -> (SPI, DC, CS) {
+    fn release(self) -> Self::Resources {
         (self.spi, self.dc, self.cs)
     }
 }
@@ -104,10 +113,18 @@ where
     pub fn new(spi: SPI, dc: DC) -> Self {
         Self { spi, dc }
     }
+}
+
+impl<SPI, DC> Deconstructable for SPIInterfaceNoCS<SPI, DC>
+where
+    SPI: hal::blocking::spi::Write<u8>,
+    DC: OutputPin,
+{
+    type Resources = (SPI, DC);
 
     /// Consume the display interface and return
     /// the underlying peripherial driver and GPIO pins used by it
-    pub fn release(self) -> (SPI, DC) {
+    fn release(self) -> Self::Resources {
         (self.spi, self.dc)
     }
 }
