@@ -199,6 +199,28 @@ where
                 self.set_value(*cmd)?;
                 self.wr.set_high().map_err(|_| DisplayError::BusWriteError)
             }),
+            DataFormat::U16LE(slice) => slice.iter().try_for_each(|cmd| {
+                for cmd in &cmd.to_le_bytes() {
+                    self.wr.set_low().map_err(|_| DisplayError::BusWriteError)?;
+                    self.set_value(*cmd)?;
+                    self.wr
+                        .set_high()
+                        .map_err(|_| DisplayError::BusWriteError)?;
+                }
+
+                Ok(())
+            }),
+            DataFormat::U16BE(slice) => slice.iter().try_for_each(|cmd| {
+                for cmd in &cmd.to_be_bytes() {
+                    self.wr.set_low().map_err(|_| DisplayError::BusWriteError)?;
+                    self.set_value(*cmd)?;
+                    self.wr
+                        .set_high()
+                        .map_err(|_| DisplayError::BusWriteError)?;
+                }
+
+                Ok(())
+            }),
         }
     }
 
@@ -217,6 +239,28 @@ where
                 self.wr.set_low().map_err(|_| DisplayError::BusWriteError)?;
                 self.set_value(*d)?;
                 self.wr.set_high().map_err(|_| DisplayError::BusWriteError)
+            }),
+            DataFormat::U16LE(slice) => slice.iter().try_for_each(|cmd| {
+                for cmd in &cmd.to_le_bytes() {
+                    self.wr.set_low().map_err(|_| DisplayError::BusWriteError)?;
+                    self.set_value(*cmd)?;
+                    self.wr
+                        .set_high()
+                        .map_err(|_| DisplayError::BusWriteError)?;
+                }
+
+                Ok(())
+            }),
+            DataFormat::U16BE(slice) => slice.iter().try_for_each(|cmd| {
+                for cmd in &cmd.to_be_bytes() {
+                    self.wr.set_low().map_err(|_| DisplayError::BusWriteError)?;
+                    self.set_value(*cmd)?;
+                    self.wr
+                        .set_high()
+                        .map_err(|_| DisplayError::BusWriteError)?;
+                }
+
+                Ok(())
             }),
         }
     }

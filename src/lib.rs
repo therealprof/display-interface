@@ -27,8 +27,14 @@ pub enum DisplayError {
 /// Display drivers need to implement non-trivial conversions (e.g. with padding)
 /// as the hardware requires.
 pub enum DataFormat<'a> {
+    /// Slice of unsigned bytes
     U8(&'a [u8]),
+    /// Slice of unsigned 16bit values with the same endianess as the system, not recommended
     U16(&'a [u16]),
+    /// Slice of unsigned 16bit values to be sent in big endian byte order
+    U16BE(&'a mut [u16]),
+    /// Slice of unsigned 16bit values to be sent in little endian byte order
+    U16LE(&'a mut [u16]),
 }
 
 impl<'a> From<&'a [u8]> for DataFormat<'a> {
