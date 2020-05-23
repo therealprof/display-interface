@@ -12,8 +12,9 @@ pub mod prelude;
 /// A ubiquitous error type for all kinds of problems which could happen when communicating with a
 /// display
 #[derive(Clone, Debug)]
+#[non_exhaustive]
 pub enum DisplayError {
-    /// Invalid transfer format selected (e.g. u16 on u8 interface)
+    /// Invalid data format selected for interface selected
     InvalidFormatError,
     /// Unable to write to bus
     BusWriteError,
@@ -21,11 +22,14 @@ pub enum DisplayError {
     DCError,
     /// Unable to assert chip select signal
     CSError,
+    /// The requested DataFormat is not implemented by this display interface implementation
+    DataFormatNotImplemented,
 }
 
 /// DI specific data format wrapper around slices of various widths
 /// Display drivers need to implement non-trivial conversions (e.g. with padding)
 /// as the hardware requires.
+#[non_exhaustive]
 pub enum DataFormat<'a> {
     /// Slice of unsigned bytes
     U8(&'a [u8]),

@@ -221,6 +221,7 @@ where
 
                 Ok(())
             }),
+            _ => Err(DisplayError::DataFormatNotImplemented),
         }
     }
 
@@ -262,6 +263,7 @@ where
 
                 Ok(())
             }),
+            _ => Err(DisplayError::DataFormatNotImplemented),
         }
     }
 }

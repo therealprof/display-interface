@@ -34,6 +34,7 @@ fn send_u8<SPI: hal::blocking::spi::Write<u8>>(
             spi.write(slice.as_byte_slice())
                 .map_err(|_| DisplayError::BusWriteError)
         }
+        _ => Err(DisplayError::DataFormatNotImplemented),
     }
 }
 
