@@ -18,6 +18,23 @@ fn send_u8<SPI: hal::blocking::spi::Write<u8>>(
             spi.write(slice.as_byte_slice())
                 .map_err(|_| DisplayError::BusWriteError)
         }
+        DataFormat::U16LE(slice) => {
+            use byte_slice_cast::*;
+            for v in slice.as_mut() {
+                *v = v.to_le();
+            }
+            spi.write(slice.as_byte_slice())
+                .map_err(|_| DisplayError::BusWriteError)
+        }
+        DataFormat::U16BE(slice) => {
+            use byte_slice_cast::*;
+            for v in slice.as_mut() {
+                *v = v.to_be();
+            }
+            spi.write(slice.as_byte_slice())
+                .map_err(|_| DisplayError::BusWriteError)
+        }
+        _ => Err(DisplayError::DataFormatNotImplemented),
     }
 }
 

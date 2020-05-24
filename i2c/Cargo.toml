@@ -1,7 +1,7 @@
 [package]
 name = "display-interface-i2c"
 description = "Generic I2C implementation for display interfaces"
-version = "0.3.1"
+version = "0.4.0"
 authors = ["Daniel Egger <daniel@eggers-club.de>"]
 repository = "https://github.com/therealprof/display-interface"
 documentation = "https://docs.rs/display-interface-i2c"
@@ -19,4 +19,4 @@ all-features = true
 
 [dependencies]
 embedded-hal = "0.2.3"
-display-interface = "0.3"
+display-interface = "0.4"
