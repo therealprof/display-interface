@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [v0.4.0] - 2020-05-25
+
+### Added
+
+- Support for 8bit and 16bit iterators as data format
+- Support for 16bit slice data format with target endian
+- Deconstructurs for included display-interface implementations
+
+### Changed
+
+- Make enums non-exhaustive and added a DataFormatNotImplemented fallback error
+
 ## [v0.3.0] - 2020-05-11
 
 ### Added
@@ -43,7 +55,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 First version
 
-[Unreleased]: https://github.com/therealprof/display-interface/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/therealprof/display-interface/compare/v0.4.0...HEAD
+[v0.4.0]: https://github.com/therealprof/display-interface/compare/v0.3.0...v0.4.0
 [v0.3.0]: https://github.com/therealprof/display-interface/compare/v0.2.1...v0.3.0
 [v0.2.1]: https://github.com/therealprof/display-interface/compare/v0.2.0...v0.2.1
 [v0.2.0]: https://github.com/therealprof/display-interface/compare/v0.1.1...v0.2.0
