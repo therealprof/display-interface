@@ -34,6 +34,74 @@ fn send_u8<SPI: hal::blocking::spi::Write<u8>>(
             spi.write(slice.as_byte_slice())
                 .map_err(|_| DisplayError::BusWriteError)
         }
+        DataFormat::U8Iter(iter) => {
+            let mut buf = [0; 32];
+            let mut i = 0;
+
+            for v in iter.into_iter() {
+                buf[i] = v;
+                i += 1;
+
+                if i == buf.len() {
+                    spi.write(&buf).map_err(|_| DisplayError::BusWriteError)?;
+                    i = 0;
+                }
+            }
+
+            if i > 0 {
+                spi.write(&buf[..i])
+                    .map_err(|_| DisplayError::BusWriteError)?;
+            }
+
+            Ok(())
+        }
+        DataFormat::U16LEIter(iter) => {
+            use byte_slice_cast::*;
+            let mut buf = [0; 32];
+            let mut i = 0;
+
+            for v in iter.map(u16::to_le) {
+                buf[i] = v;
+                i += 1;
+
+                if i == buf.len() {
+                    spi.write(&buf.as_byte_slice())
+                        .map_err(|_| DisplayError::BusWriteError)?;
+                    i = 0;
+                }
+            }
+
+            if i > 0 {
+                spi.write(&buf[..i].as_byte_slice())
+                    .map_err(|_| DisplayError::BusWriteError)?;
+            }
+
+            Ok(())
+        }
+        DataFormat::U16BEIter(iter) => {
+            use byte_slice_cast::*;
+            let mut buf = [0; 64];
+            let mut i = 0;
+            let len = buf.len();
+
+            for v in iter.map(u16::to_be) {
+                buf[i] = v;
+                i += 1;
+
+                if i == len {
+                    spi.write(&buf.as_byte_slice())
+                        .map_err(|_| DisplayError::BusWriteError)?;
+                    i = 0;
+                }
+            }
+
+            if i > 0 {
+                spi.write(&buf[..i].as_byte_slice())
+                    .map_err(|_| DisplayError::BusWriteError)?;
+            }
+
+            Ok(())
+        }
         _ => Err(DisplayError::DataFormatNotImplemented),
     }
 }
