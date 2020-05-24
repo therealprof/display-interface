@@ -39,18 +39,12 @@ pub enum DataFormat<'a> {
     U16BE(&'a mut [u16]),
     /// Slice of unsigned 16bit values to be sent in little endian byte order
     U16LE(&'a mut [u16]),
-}
-
-impl<'a> From<&'a [u8]> for DataFormat<'a> {
-    fn from(arr_ref: &'a [u8]) -> Self {
-        Self::U8(arr_ref)
-    }
-}
-
-impl<'a> From<&'a [u16]> for DataFormat<'a> {
-    fn from(arr_ref: &'a [u16]) -> Self {
-        Self::U16(arr_ref)
-    }
+    /// Iterator over unsigned bytes
+    U8Iter(&'a mut dyn Iterator<Item = u8>),
+    /// Iterator over unsigned 16bit values to be sent in big endian byte order
+    U16BEIter(&'a mut dyn Iterator<Item = u16>),
+    /// Iterator over unsigned 16bit values to be sent in little endian byte order
+    U16LEIter(&'a mut dyn Iterator<Item = u16>),
 }
 
 /// This trait implements a write-only interface for a display which has separate data and command
