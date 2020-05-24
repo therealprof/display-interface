@@ -59,7 +59,7 @@ where
                     return Ok(());
                 }
 
-                let mut writebuf: [u8; 17] = [0; 17];
+                let mut writebuf = [0; 17];
 
                 // Data mode
                 writebuf[0] = self.data_byte;
@@ -75,6 +75,34 @@ where
                         self.i2c.write(self.addr, &writebuf[0..=chunk_len])
                     })
                     .map_err(|_| DisplayError::BusWriteError)
+            }
+            DataFormat::U8Iter(iter) => {
+                let mut writebuf = [0; 17];
+                let mut i = 1;
+                let len = writebuf.len();
+
+                // Data mode
+                writebuf[0] = self.data_byte;
+
+                for byte in iter.into_iter() {
+                    writebuf[i] = byte;
+                    i += 1;
+
+                    if i == len {
+                        self.i2c
+                            .write(self.addr, &writebuf[0..=len])
+                            .map_err(|_| DisplayError::BusWriteError)?;
+                        i = 1;
+                    }
+                }
+
+                if i > 1 {
+                    self.i2c
+                        .write(self.addr, &writebuf[0..=i])
+                        .map_err(|_| DisplayError::BusWriteError)?;
+                }
+
+                Ok(())
             }
             _ => Err(DisplayError::DataFormatNotImplemented),
         }
