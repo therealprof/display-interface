@@ -194,6 +194,17 @@ where
                 self.set_value(*cmd)?;
                 self.wr.set_high().map_err(|_| DisplayError::BusWriteError)
             }),
+            DataFormat::U8Iter(iter) => {
+                for c in iter.into_iter() {
+                    self.wr.set_low().map_err(|_| DisplayError::BusWriteError)?;
+                    self.set_value(c)?;
+                    self.wr
+                        .set_high()
+                        .map_err(|_| DisplayError::BusWriteError)?;
+                }
+
+                Ok(())
+            }
             DataFormat::U16(slice) => slice.as_byte_slice().iter().try_for_each(|cmd| {
                 self.wr.set_low().map_err(|_| DisplayError::BusWriteError)?;
                 self.set_value(*cmd)?;
