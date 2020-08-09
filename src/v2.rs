@@ -5,6 +5,7 @@ pub enum WriteMode {
     Data,
     Command,
 }
+
 pub trait WriteInterface<DataFormat> {
     fn write(&mut self, mode: WriteMode, buf: &[DataFormat]) -> Result<(), DisplayError> {
         self.write_iter(mode, &mut buf.into_iter())
@@ -14,6 +15,14 @@ pub trait WriteInterface<DataFormat> {
         &mut self,
         mode: WriteMode,
         iter: &mut dyn Iterator<Item = &DataFormat>,
+    ) -> Result<(), DisplayError> {
+        self.write_stream(mode, &mut || iter.next())
+    }
+
+    fn write_stream<'a>(
+        &mut self,
+        mode: WriteMode,
+        func: &mut dyn FnMut() -> Option<&'a DataFormat>,
     ) -> Result<(), DisplayError>;
 }
 
