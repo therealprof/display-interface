@@ -19,5 +19,5 @@ all-features = true
 
 [dependencies]
 embedded-hal = "0.2.3"
-display-interface = "0.4"
+display-interface = { git = "https://github.com/chrismoos/display-interface", branch = "rw-interface"}
 byte-slice-cast = { version = "0.3.5", default-features = false }
