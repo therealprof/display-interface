@@ -3,7 +3,7 @@
 //! Generic I2C interface for display drivers
 use embedded_hal as hal;
 
-use display_interface::{DataFormat, DisplayError, WriteOnlyDataCommand};
+use display_interface::{DisplayError, WriteOnlyDataCommand};
 
 /// I2C communication interface
 pub struct I2CInterface<I2C> {
@@ -30,81 +30,59 @@ where
     pub fn release(self) -> I2C {
         self.i2c
     }
+
+    fn send_iter<I>(&mut self, first_byte: u8, data: I) -> Result<(), DisplayError>
+    where
+        I: Iterator<Item = u8>,
+    {
+        let mut writebuf = [0; 17];
+        let mut i = 1;
+        let len = writebuf.len();
+
+        // Data/command mode
+        writebuf[0] = first_byte;
+
+        for byte in data {
+            writebuf[i] = byte;
+            i += 1;
+
+            if i == len {
+                self.i2c
+                    .write(self.addr, &writebuf[0..=len])
+                    .map_err(|_| DisplayError::BusWriteError)?;
+                i = 1;
+            }
+        }
+
+        if i > 1 {
+            self.i2c
+                .write(self.addr, &writebuf[0..=i])
+                .map_err(|_| DisplayError::BusWriteError)?;
+        }
+
+        Ok(())
+    }
 }
 
 impl<I2C> WriteOnlyDataCommand for I2CInterface<I2C>
 where
     I2C: hal::blocking::i2c::Write,
 {
-    fn send_commands(&mut self, cmds: DataFormat<'_>) -> Result<(), DisplayError> {
-        // Copy over given commands to new aray to prefix with command identifier
-        match cmds {
-            DataFormat::U8(slice) => {
-                let mut writebuf: [u8; 8] = [0; 8];
-                writebuf[1..=slice.len()].copy_from_slice(&slice[0..slice.len()]);
+    type Word = u8;
 
-                self.i2c
-                    .write(self.addr, &writebuf[..=slice.len()])
-                    .map_err(|_| DisplayError::BusWriteError)
-            }
-            _ => Err(DisplayError::DataFormatNotImplemented),
-        }
+    #[inline]
+    fn send_command_iter<I>(&mut self, iter: I) -> Result<(), DisplayError>
+    where
+        I: Iterator<Item = Self::Word>,
+    {
+        self.send_iter(0, iter)
     }
 
-    fn send_data(&mut self, buf: DataFormat<'_>) -> Result<(), DisplayError> {
-        match buf {
-            DataFormat::U8(slice) => {
-                // No-op if the data buffer is empty
-                if slice.is_empty() {
-                    return Ok(());
-                }
-
-                let mut writebuf = [0; 17];
-
-                // Data mode
-                writebuf[0] = self.data_byte;
-
-                slice
-                    .chunks(16)
-                    .try_for_each(|c| {
-                        let chunk_len = c.len();
-
-                        // Copy over all data from buffer, leaving the data command byte intact
-                        writebuf[1..=chunk_len].copy_from_slice(c);
-
-                        self.i2c.write(self.addr, &writebuf[0..=chunk_len])
-                    })
-                    .map_err(|_| DisplayError::BusWriteError)
-            }
-            DataFormat::U8Iter(iter) => {
-                let mut writebuf = [0; 17];
-                let mut i = 1;
-                let len = writebuf.len();
-
-                // Data mode
-                writebuf[0] = self.data_byte;
-
-                for byte in iter.into_iter() {
-                    writebuf[i] = byte;
-                    i += 1;
-
-                    if i == len {
-                        self.i2c
-                            .write(self.addr, &writebuf[0..=len])
-                            .map_err(|_| DisplayError::BusWriteError)?;
-                        i = 1;
-                    }
-                }
-
-                if i > 1 {
-                    self.i2c
-                        .write(self.addr, &writebuf[0..=i])
-                        .map_err(|_| DisplayError::BusWriteError)?;
-                }
-
-                Ok(())
-            }
-            _ => Err(DisplayError::DataFormatNotImplemented),
-        }
+    #[inline]
+    fn send_data_iter<I>(&mut self, iter: I) -> Result<(), DisplayError>
+    where
+        I: Iterator<Item = Self::Word>,
+    {
+        self.send_iter(self.data_byte, iter)
     }
 }
