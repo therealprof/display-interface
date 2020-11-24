@@ -4,7 +4,7 @@
 
 use embedded_hal::digital::v2::OutputPin;
 
-pub use display_interface::{DataFormat, DisplayError, WriteOnlyDataCommand};
+pub use display_interface::{DisplayError, WriteOnlyDataCommand};
 
 /// This trait represents the data pins of a parallel bus.
 ///
@@ -143,6 +143,14 @@ where
     fn set_value(self: &mut Self, value: u8) -> Result<(), DisplayError> {
         self.bus.set_value(value)
     }
+
+    fn send_iter<I: Iterator<Item = u8>>(&mut self, mut iter: I) -> Result<(), DisplayError> {
+        iter.try_for_each(|d| {
+            self.wr.set_low().map_err(|_| DisplayError::BusWriteError)?;
+            self.set_value(d)?;
+            self.wr.set_high().map_err(|_| DisplayError::BusWriteError)
+        })
+    }
 }
 
 impl<BUS, DC, WR> WriteOnlyDataCommand for PGPIO8BitInterface<BUS, DC, WR>
@@ -151,129 +159,23 @@ where
     DC: OutputPin,
     WR: OutputPin,
 {
-    fn send_commands(&mut self, cmds: DataFormat<'_>) -> Result<(), DisplayError> {
-        use byte_slice_cast::*;
+    type Word = u8;
+
+    fn send_command_iter<I>(&mut self, iter: I) -> Result<(), DisplayError>
+    where
+        I: Iterator<Item = Self::Word>,
+    {
         self.dc.set_low().map_err(|_| DisplayError::DCError)?;
-        match cmds {
-            DataFormat::U8(slice) => slice.iter().try_for_each(|cmd| {
-                self.wr.set_low().map_err(|_| DisplayError::BusWriteError)?;
-                self.set_value(*cmd)?;
-                self.wr.set_high().map_err(|_| DisplayError::BusWriteError)
-            }),
-            DataFormat::U8Iter(iter) => {
-                for c in iter.into_iter() {
-                    self.wr.set_low().map_err(|_| DisplayError::BusWriteError)?;
-                    self.set_value(c)?;
-                    self.wr
-                        .set_high()
-                        .map_err(|_| DisplayError::BusWriteError)?;
-                }
 
-                Ok(())
-            }
-            DataFormat::U16(slice) => slice.as_byte_slice().iter().try_for_each(|cmd| {
-                self.wr.set_low().map_err(|_| DisplayError::BusWriteError)?;
-                self.set_value(*cmd)?;
-                self.wr.set_high().map_err(|_| DisplayError::BusWriteError)
-            }),
-            DataFormat::U16LE(slice) => slice.iter().try_for_each(|cmd| {
-                for cmd in &cmd.to_le_bytes() {
-                    self.wr.set_low().map_err(|_| DisplayError::BusWriteError)?;
-                    self.set_value(*cmd)?;
-                    self.wr
-                        .set_high()
-                        .map_err(|_| DisplayError::BusWriteError)?;
-                }
-
-                Ok(())
-            }),
-            DataFormat::U16BE(slice) => slice.iter().try_for_each(|cmd| {
-                for cmd in &cmd.to_be_bytes() {
-                    self.wr.set_low().map_err(|_| DisplayError::BusWriteError)?;
-                    self.set_value(*cmd)?;
-                    self.wr
-                        .set_high()
-                        .map_err(|_| DisplayError::BusWriteError)?;
-                }
-
-                Ok(())
-            }),
-            _ => Err(DisplayError::DataFormatNotImplemented),
-        }
+        self.send_iter(iter)
     }
 
-    fn send_data(&mut self, buf: DataFormat<'_>) -> Result<(), DisplayError> {
-        use byte_slice_cast::*;
+    fn send_data_iter<I>(&mut self, iter: I) -> Result<(), DisplayError>
+    where
+        I: Iterator<Item = Self::Word>,
+    {
         self.dc.set_high().map_err(|_| DisplayError::DCError)?;
-        match buf {
-            DataFormat::U8(slice) => slice.iter().try_for_each(|d| {
-                self.wr.set_low().map_err(|_| DisplayError::BusWriteError)?;
-                self.set_value(*d)?;
-                self.wr.set_high().map_err(|_| DisplayError::BusWriteError)
-            }),
-            DataFormat::U16(slice) => slice.as_byte_slice().iter().try_for_each(|d| {
-                self.wr.set_low().map_err(|_| DisplayError::BusWriteError)?;
-                self.set_value(*d)?;
-                self.wr.set_high().map_err(|_| DisplayError::BusWriteError)
-            }),
-            DataFormat::U16LE(slice) => slice.iter().try_for_each(|cmd| {
-                for cmd in &cmd.to_le_bytes() {
-                    self.wr.set_low().map_err(|_| DisplayError::BusWriteError)?;
-                    self.set_value(*cmd)?;
-                    self.wr
-                        .set_high()
-                        .map_err(|_| DisplayError::BusWriteError)?;
-                }
 
-                Ok(())
-            }),
-            DataFormat::U16BE(slice) => slice.iter().try_for_each(|cmd| {
-                for cmd in &cmd.to_be_bytes() {
-                    self.wr.set_low().map_err(|_| DisplayError::BusWriteError)?;
-                    self.set_value(*cmd)?;
-                    self.wr
-                        .set_high()
-                        .map_err(|_| DisplayError::BusWriteError)?;
-                }
-
-                Ok(())
-            }),
-            DataFormat::U8Iter(iter) => {
-                for d in iter.into_iter() {
-                    self.wr.set_low().map_err(|_| DisplayError::BusWriteError)?;
-                    self.set_value(d)?;
-                    self.wr
-                        .set_high()
-                        .map_err(|_| DisplayError::BusWriteError)?;
-                }
-
-                Ok(())
-            }
-            DataFormat::U16LEIter(iter) => {
-                for cmd in iter.into_iter() {
-                    for cmd in &cmd.to_le_bytes() {
-                        self.wr.set_low().map_err(|_| DisplayError::BusWriteError)?;
-                        self.set_value(*cmd)?;
-                        self.wr
-                            .set_high()
-                            .map_err(|_| DisplayError::BusWriteError)?;
-                    }
-                }
-                Ok(())
-            }
-            DataFormat::U16BEIter(iter) => {
-                for cmd in iter.into_iter() {
-                    for cmd in &cmd.to_be_bytes() {
-                        self.wr.set_low().map_err(|_| DisplayError::BusWriteError)?;
-                        self.set_value(*cmd)?;
-                        self.wr
-                            .set_high()
-                            .map_err(|_| DisplayError::BusWriteError)?;
-                    }
-                }
-                Ok(())
-            }
-            _ => Err(DisplayError::DataFormatNotImplemented),
-        }
+        self.send_iter(iter)
     }
 }
