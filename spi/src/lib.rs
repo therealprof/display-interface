@@ -106,6 +106,46 @@ where
 
         err
     }
+
+    #[inline]
+    fn send_command_slice(&mut self, slice: &[Self::Word]) -> Result<(), DisplayError> {
+        // Assert chip select pin
+        self.cs.set_low().map_err(|_| DisplayError::CSError)?;
+
+        // 1 = data, 0 = command
+        self.dc.set_low().map_err(|_| DisplayError::DCError)?;
+
+        // Send words over SPI
+        let err = self
+            .spi
+            .write(slice)
+            .map_err(|_| DisplayError::BusWriteError);
+
+        // Deassert chip select pin
+        self.cs.set_high().ok();
+
+        err
+    }
+
+    #[inline]
+    fn send_data_slice(&mut self, slice: &[Self::Word]) -> Result<(), DisplayError> {
+        // Assert chip select pin
+        self.cs.set_low().map_err(|_| DisplayError::CSError)?;
+
+        // 1 = data, 0 = command
+        self.dc.set_high().map_err(|_| DisplayError::DCError)?;
+
+        // Send words over SPI
+        let err = self
+            .spi
+            .write(slice)
+            .map_err(|_| DisplayError::BusWriteError);
+
+        // Deassert chip select pin
+        self.cs.set_high().ok();
+
+        err
+    }
 }
 
 /// SPI display interface.
@@ -162,5 +202,27 @@ where
 
         // Send words over SPI
         send_iter(&mut self.spi, iter)
+    }
+
+    #[inline]
+    fn send_command_slice(&mut self, slice: &[Self::Word]) -> Result<(), DisplayError> {
+        // 1 = data, 0 = command
+        self.dc.set_low().map_err(|_| DisplayError::DCError)?;
+
+        // Send words over SPI
+        self.spi
+            .write(slice)
+            .map_err(|_| DisplayError::BusWriteError)
+    }
+
+    #[inline]
+    fn send_data_slice(&mut self, slice: &[Self::Word]) -> Result<(), DisplayError> {
+        // 1 = data, 0 = command
+        self.dc.set_high().map_err(|_| DisplayError::DCError)?;
+
+        // Send words over SPI
+        self.spi
+            .write(slice)
+            .map_err(|_| DisplayError::BusWriteError)
     }
 }
