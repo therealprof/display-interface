@@ -18,57 +18,23 @@ pub use display_interface::{DataFormat, DisplayError, WriteOnlyDataCommand};
 /// All pins are supposed to be high-active, high for the D/C pin meaning "data" and the
 /// write-enable being pulled low before the setting of the bits and supposed to be sampled at a
 /// low to high edge.
-pub struct PGPIO8BitInterface<P0, P1, P2, P3, P4, P5, P6, P7, DC, WR> {
-    p0: P0,
-    p1: P1,
-    p2: P2,
-    p3: P3,
-    p4: P4,
-    p5: P5,
-    p6: P6,
-    p7: P7,
+pub struct PGPIO8BitInterface<DBUS, DC, WR> {
+    dbus: [DBUS; 8],
     dc: DC,
     wr: WR,
     last: u8,
 }
 
-impl<P0, P1, P2, P3, P4, P5, P6, P7, DC, WR>
-    PGPIO8BitInterface<P0, P1, P2, P3, P4, P5, P6, P7, DC, WR>
+impl<DBUS, DC, WR> PGPIO8BitInterface<DBUS, DC, WR>
 where
-    P0: OutputPin,
-    P1: OutputPin,
-    P2: OutputPin,
-    P3: OutputPin,
-    P4: OutputPin,
-    P5: OutputPin,
-    P6: OutputPin,
-    P7: OutputPin,
+    DBUS: OutputPin,
     DC: OutputPin,
     WR: OutputPin,
 {
     /// Create new parallel GPIO interface for communication with a display driver
-    #[allow(clippy::too_many_arguments)]
-    pub fn new(
-        p0: P0,
-        p1: P1,
-        p2: P2,
-        p3: P3,
-        p4: P4,
-        p5: P5,
-        p6: P6,
-        p7: P7,
-        dc: DC,
-        wr: WR,
-    ) -> Self {
+    pub fn new(dbus: [DBUS; 8], dc: DC, wr: WR) -> Self {
         Self {
-            p0,
-            p1,
-            p2,
-            p3,
-            p4,
-            p5,
-            p6,
-            p7,
+            dbus,
             dc,
             wr,
             last: 0,
@@ -77,11 +43,8 @@ where
 
     /// Consume the display interface and return
     /// the GPIO pins used by it
-    pub fn release(self) -> (P0, P1, P2, P3, P4, P5, P6, P7, DC, WR) {
-        (
-            self.p0, self.p1, self.p2, self.p3, self.p4, self.p5, self.p6, self.p7, self.dc,
-            self.wr,
-        )
+    pub fn release(self) -> ([DBUS; 8], DC, WR) {
+        (self.dbus, self.dc, self.wr)
     }
 
     fn set_value(self: &mut Self, value: u8) -> Result<(), DisplayError> {
@@ -95,99 +58,30 @@ where
 
         self.last = value;
 
-        if changed & 1 != 0 {
-            if value & 1 != 0 {
-                self.p0.set_high()
-            } else {
-                self.p0.set_low()
+        for i in 0..8 {
+            if changed & (1 << i) != 0 {
+                if value & (1 << i) == 0 {
+                    self.dbus[i].set_low()
+                } else {
+                    self.dbus[i].set_high()
+                }
+                .map_err(|_| DisplayError::BusWriteError)?;
             }
-            .map_err(|_| DisplayError::BusWriteError)?
-        };
-
-        if changed & 2 != 0 {
-            if value & 2 != 0 {
-                self.p1.set_high()
-            } else {
-                self.p1.set_low()
-            }
-            .map_err(|_| DisplayError::BusWriteError)?
-        };
-
-        if changed & 4 != 0 {
-            if value & 4 != 0 {
-                self.p2.set_high()
-            } else {
-                self.p2.set_low()
-            }
-            .map_err(|_| DisplayError::BusWriteError)?
-        };
-
-        if changed & 8 != 0 {
-            if value & 8 != 0 {
-                self.p3.set_high()
-            } else {
-                self.p3.set_low()
-            }
-            .map_err(|_| DisplayError::BusWriteError)?
-        };
-
-        if changed & 16 != 0 {
-            if value & 16 != 0 {
-                self.p4.set_high()
-            } else {
-                self.p4.set_low()
-            }
-            .map_err(|_| DisplayError::BusWriteError)?
-        };
-
-        if changed & 32 != 0 {
-            if value & 32 != 0 {
-                self.p5.set_high()
-            } else {
-                self.p5.set_low()
-            }
-            .map_err(|_| DisplayError::BusWriteError)?
-        };
-
-        if changed & 64 != 0 {
-            if value & 64 != 0 {
-                self.p6.set_high()
-            } else {
-                self.p6.set_low()
-            }
-            .map_err(|_| DisplayError::BusWriteError)?
-        };
-
-        if changed & 128 != 0 {
-            if value & 128 != 0 {
-                self.p7.set_high()
-            } else {
-                self.p7.set_low()
-            }
-            .map_err(|_| DisplayError::BusWriteError)?
-        };
+        }
 
         Ok(())
     }
 }
 
-impl<P0, P1, P2, P3, P4, P5, P6, P7, DC, WR> WriteOnlyDataCommand
-    for PGPIO8BitInterface<P0, P1, P2, P3, P4, P5, P6, P7, DC, WR>
+impl<DBUS, DC, WR> WriteOnlyDataCommand for PGPIO8BitInterface<DBUS, DC, WR>
 where
-    P0: OutputPin,
-    P1: OutputPin,
-    P2: OutputPin,
-    P3: OutputPin,
-    P4: OutputPin,
-    P5: OutputPin,
-    P6: OutputPin,
-    P7: OutputPin,
+    DBUS: OutputPin,
     DC: OutputPin,
     WR: OutputPin,
 {
     fn send_commands(&mut self, cmds: DataFormat<'_>) -> Result<(), DisplayError> {
         use byte_slice_cast::*;
-        self.dc.set_low().map_err(|_| DisplayError::BusWriteError)?;
+        self.dc.set_low().map_err(|_| DisplayError::DCError)?;
         match cmds {
             DataFormat::U8(slice) => slice.iter().try_for_each(|cmd| {
                 self.wr.set_low().map_err(|_| DisplayError::BusWriteError)?;
@@ -238,9 +132,7 @@ where
 
     fn send_data(&mut self, buf: DataFormat<'_>) -> Result<(), DisplayError> {
         use byte_slice_cast::*;
-        self.dc
-            .set_high()
-            .map_err(|_| DisplayError::BusWriteError)?;
+        self.dc.set_high().map_err(|_| DisplayError::DCError)?;
         match buf {
             DataFormat::U8(slice) => slice.iter().try_for_each(|d| {
                 self.wr.set_low().map_err(|_| DisplayError::BusWriteError)?;

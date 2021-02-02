@@ -24,6 +24,8 @@ pub enum DisplayError {
     CSError,
     /// The requested DataFormat is not implemented by this display interface implementation
     DataFormatNotImplemented,
+    /// Unable to assert or de-assert reset signal
+    RSError,
 }
 
 /// DI specific data format wrapper around slices of various widths
