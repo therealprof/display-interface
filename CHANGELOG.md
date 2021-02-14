@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+
+- Return `DCError` instead of `BusWriteError` on errors (de-)asserting the DC signal in 8-bit GPIO interfaces
+
 ## [v0.4.0] - 2020-05-25
 
 ### Added

@@ -187,7 +187,7 @@ where
 {
     fn send_commands(&mut self, cmds: DataFormat<'_>) -> Result<(), DisplayError> {
         use byte_slice_cast::*;
-        self.dc.set_low().map_err(|_| DisplayError::BusWriteError)?;
+        self.dc.set_low().map_err(|_| DisplayError::DCError)?;
         match cmds {
             DataFormat::U8(slice) => slice.iter().try_for_each(|cmd| {
                 self.wr.set_low().map_err(|_| DisplayError::BusWriteError)?;
@@ -240,7 +240,7 @@ where
         use byte_slice_cast::*;
         self.dc
             .set_high()
-            .map_err(|_| DisplayError::BusWriteError)?;
+            .map_err(|_| DisplayError::DCError)?;
         match buf {
             DataFormat::U8(slice) => slice.iter().try_for_each(|d| {
                 self.wr.set_low().map_err(|_| DisplayError::BusWriteError)?;
