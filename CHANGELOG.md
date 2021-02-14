@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+
+- display-interface-parallel-gpio API now takes an array of `OutputPin` for the parallel data bus rather than 8 separate `OutputPin`
+
 ## [v0.4.0] - 2020-05-25
 
 ### Added
