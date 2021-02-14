@@ -7,13 +7,17 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- New `DisplayError` variant `RSError` to use with problems with the display's reset signal
+
 ## [v0.4.0] - 2020-05-25
 
 ### Added
 
 - Support for 8bit and 16bit iterators as data format
 - Support for 16bit slice data format with target endian
-- Deconstructurs for included display-interface implementations
+- Deconstructors for included display-interface implementations
 
 ### Changed
 
