@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- New `DisplayError` variant `RSError` to use with problems with the display's reset signal
+
 ### Changed
 
 - Return `DCError` instead of `BusWriteError` on errors (de-)asserting the DC signal in 8-bit GPIO interfaces
@@ -17,7 +21,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 - Support for 8bit and 16bit iterators as data format
 - Support for 16bit slice data format with target endian
-- Deconstructurs for included display-interface implementations
+- Deconstructors for included display-interface implementations
 
 ### Changed
 
