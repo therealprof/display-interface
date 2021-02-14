@@ -238,9 +238,7 @@ where
 
     fn send_data(&mut self, buf: DataFormat<'_>) -> Result<(), DisplayError> {
         use byte_slice_cast::*;
-        self.dc
-            .set_high()
-            .map_err(|_| DisplayError::DCError)?;
+        self.dc.set_high().map_err(|_| DisplayError::DCError)?;
         match buf {
             DataFormat::U8(slice) => slice.iter().try_for_each(|d| {
                 self.wr.set_low().map_err(|_| DisplayError::BusWriteError)?;
