@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 
 - New `DisplayError` variant `RSError` to use with problems with the display's reset signal
+- New `DisplayError` variant `OutOfBoundsError` to use when writing to a non-existing pixel outside the display's bounds
 
 ### Changed
 

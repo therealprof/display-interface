@@ -26,6 +26,8 @@ pub enum DisplayError {
     DataFormatNotImplemented,
     /// Unable to assert or de-assert reset signal
     RSError,
+    /// Attempted to write to a non-existing pixel outside the display's bounds
+    OutOfBoundsError,
 }
 
 /// DI specific data format wrapper around slices of various widths
