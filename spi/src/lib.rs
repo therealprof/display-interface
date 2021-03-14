@@ -7,9 +7,9 @@ use hal::digital::v2::OutputPin;
 
 use display_interface::{DisplayError, WriteOnlyDataCommand};
 
-fn send_iter<SPI: hal::blocking::spi::Write<u8>, I: Iterator<Item = u8>>(
-    spi: &mut SPI,
-    iter: I,
+fn send_iter(
+    spi: &mut impl hal::blocking::spi::Write<u8>,
+    iter: impl Iterator<Item = u8>,
 ) -> Result<(), DisplayError> {
     let mut buf = [0; 32];
     let mut i = 0;
@@ -68,10 +68,10 @@ where
     type Word = u8;
 
     #[inline]
-    fn send_command_iter<I>(&mut self, iter: I) -> Result<(), DisplayError>
-    where
-        I: Iterator<Item = Self::Word>,
-    {
+    fn send_command_iter(
+        &mut self,
+        iter: impl Iterator<Item = Self::Word>,
+    ) -> Result<(), DisplayError> {
         // Assert chip select pin
         self.cs.set_low().map_err(|_| DisplayError::CSError)?;
 
@@ -88,10 +88,10 @@ where
     }
 
     #[inline]
-    fn send_data_iter<I>(&mut self, iter: I) -> Result<(), DisplayError>
-    where
-        I: Iterator<Item = Self::Word>,
-    {
+    fn send_data_iter(
+        &mut self,
+        iter: impl Iterator<Item = Self::Word>,
+    ) -> Result<(), DisplayError> {
         // Assert chip select pin
         self.cs.set_low().map_err(|_| DisplayError::CSError)?;
 
@@ -181,10 +181,10 @@ where
     type Word = u8;
 
     #[inline]
-    fn send_command_iter<I>(&mut self, iter: I) -> Result<(), DisplayError>
-    where
-        I: Iterator<Item = Self::Word>,
-    {
+    fn send_command_iter(
+        &mut self,
+        iter: impl Iterator<Item = Self::Word>,
+    ) -> Result<(), DisplayError> {
         // 1 = data, 0 = command
         self.dc.set_low().map_err(|_| DisplayError::DCError)?;
 
@@ -193,10 +193,10 @@ where
     }
 
     #[inline]
-    fn send_data_iter<I>(&mut self, iter: I) -> Result<(), DisplayError>
-    where
-        I: Iterator<Item = Self::Word>,
-    {
+    fn send_data_iter(
+        &mut self,
+        iter: impl Iterator<Item = Self::Word>,
+    ) -> Result<(), DisplayError> {
         // 1 = data, 0 = command
         self.dc.set_high().map_err(|_| DisplayError::DCError)?;
 

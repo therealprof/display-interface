@@ -161,19 +161,19 @@ where
 {
     type Word = u8;
 
-    fn send_command_iter<I>(&mut self, iter: I) -> Result<(), DisplayError>
-    where
-        I: Iterator<Item = Self::Word>,
-    {
+    fn send_command_iter(
+        &mut self,
+        iter: impl Iterator<Item = Self::Word>,
+    ) -> Result<(), DisplayError> {
         self.dc.set_low().map_err(|_| DisplayError::DCError)?;
 
         self.send_iter(iter)
     }
 
-    fn send_data_iter<I>(&mut self, iter: I) -> Result<(), DisplayError>
-    where
-        I: Iterator<Item = Self::Word>,
-    {
+    fn send_data_iter(
+        &mut self,
+        iter: impl Iterator<Item = Self::Word>,
+    ) -> Result<(), DisplayError> {
         self.dc.set_high().map_err(|_| DisplayError::DCError)?;
 
         self.send_iter(iter)

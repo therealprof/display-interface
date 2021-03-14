@@ -32,13 +32,15 @@ pub enum DisplayError {
 pub trait WriteOnlyDataCommand {
     type Word: Copy;
 
-    fn send_command_iter<I>(&mut self, iter: I) -> Result<(), DisplayError>
-    where
-        I: Iterator<Item = Self::Word>;
+    fn send_command_iter(
+        &mut self,
+        iter: impl Iterator<Item = Self::Word>,
+    ) -> Result<(), DisplayError>;
 
-    fn send_data_iter<I>(&mut self, iter: I) -> Result<(), DisplayError>
-    where
-        I: Iterator<Item = Self::Word>;
+    fn send_data_iter(
+        &mut self,
+        iter: impl Iterator<Item = Self::Word>,
+    ) -> Result<(), DisplayError>;
 
     #[inline]
     fn send_command_slice(&mut self, slice: &[Self::Word]) -> Result<(), DisplayError> {

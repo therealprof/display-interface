@@ -31,10 +31,11 @@ where
         self.i2c
     }
 
-    fn send_iter<I>(&mut self, first_byte: u8, data: I) -> Result<(), DisplayError>
-    where
-        I: Iterator<Item = u8>,
-    {
+    fn send_iter(
+        &mut self,
+        first_byte: u8,
+        data: impl Iterator<Item = u8>,
+    ) -> Result<(), DisplayError> {
         let mut writebuf = [0; 17];
         let mut i = 1;
         let len = writebuf.len();
@@ -71,18 +72,18 @@ where
     type Word = u8;
 
     #[inline]
-    fn send_command_iter<I>(&mut self, iter: I) -> Result<(), DisplayError>
-    where
-        I: Iterator<Item = Self::Word>,
-    {
+    fn send_command_iter(
+        &mut self,
+        iter: impl Iterator<Item = Self::Word>,
+    ) -> Result<(), DisplayError> {
         self.send_iter(0, iter)
     }
 
     #[inline]
-    fn send_data_iter<I>(&mut self, iter: I) -> Result<(), DisplayError>
-    where
-        I: Iterator<Item = Self::Word>,
-    {
+    fn send_data_iter(
+        &mut self,
+        iter: impl Iterator<Item = Self::Word>,
+    ) -> Result<(), DisplayError> {
         self.send_iter(self.data_byte, iter)
     }
 }
