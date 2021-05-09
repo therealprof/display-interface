@@ -108,24 +108,24 @@ generic_bus! {
     }
 }
 
-/// Parallel 8 Bit communication interface
+/// Parallel communication interface
 ///
-/// This interface implements an 8-Bit "8080" style write-only display interface using any
-/// 8-bit [OutputBus] implementation as well as one
+/// This interface implements an "8080" style write-only display interface using any
+/// [OutputBus] implementation as well as one
 /// `OutputPin` for the data/command selection and one `OutputPin` for the write-enable flag.
 ///
 /// All pins are supposed to be high-active, high for the D/C pin meaning "data" and the
 /// write-enable being pulled low before the setting of the bits and supposed to be sampled at a
 /// low to high edge.
-pub struct PGPIO8BitInterface<BUS, DC, WR> {
+pub struct ParallelInterface<BUS, DC, WR> {
     bus: BUS,
     dc: DC,
     wr: WR,
 }
 
-impl<BUS, DC, WR> PGPIO8BitInterface<BUS, DC, WR>
+impl<BUS, DC, WR> ParallelInterface<BUS, DC, WR>
 where
-    BUS: OutputBus<Word = u8>,
+    BUS: OutputBus,
     DC: OutputPin,
     WR: OutputPin,
 {
@@ -140,11 +140,11 @@ where
         (self.bus, self.dc, self.wr)
     }
 
-    fn set_value(self: &mut Self, value: u8) -> Result<(), DisplayError> {
+    fn set_value(self: &mut Self, value: BUS::Word) -> Result<(), DisplayError> {
         self.bus.set_value(value)
     }
 
-    fn send_iter<I: Iterator<Item = u8>>(&mut self, mut iter: I) -> Result<(), DisplayError> {
+    fn send_iter<I: Iterator<Item = BUS::Word>>(&mut self, mut iter: I) -> Result<(), DisplayError> {
         iter.try_for_each(|d| {
             self.wr.set_low().map_err(|_| DisplayError::BusWriteError)?;
             self.set_value(d)?;
@@ -153,13 +153,13 @@ where
     }
 }
 
-impl<BUS, DC, WR> WriteOnlyDataCommand for PGPIO8BitInterface<BUS, DC, WR>
+impl<BUS, DC, WR> WriteOnlyDataCommand for ParallelInterface<BUS, DC, WR>
 where
-    BUS: OutputBus<Word = u8>,
+    BUS: OutputBus,
     DC: OutputPin,
     WR: OutputPin,
 {
-    type Word = u8;
+    type Word = BUS::Word;
 
     fn send_command_iter(
         &mut self,
