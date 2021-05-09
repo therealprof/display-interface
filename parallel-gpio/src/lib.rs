@@ -168,7 +168,10 @@ where
         self.bus.set_value(value)
     }
 
-    fn send_iter<I: Iterator<Item = BUS::Word>>(&mut self, mut iter: I) -> Result<(), DisplayError> {
+    fn send_iter<I: Iterator<Item = BUS::Word>>(
+        &mut self,
+        mut iter: I,
+    ) -> Result<(), DisplayError> {
         iter.try_for_each(|d| {
             self.wr.set_low().map_err(|_| DisplayError::BusWriteError)?;
             self.set_value(d)?;
