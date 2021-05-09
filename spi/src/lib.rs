@@ -109,8 +109,7 @@ fn send_u8<SPI: hal::blocking::spi::Write<u8>>(spi: &mut SPI, words: DataFormat<
 ///
 /// This combines the SPI peripheral and a data/command as well as a chip-select pin
 pub struct SPIInterface<SPI, DC, CS> {
-    spi: SPI,
-    dc: DC,
+    spi_no_cs: SPIInterfaceNoCS<SPI, DC>,
     cs: CS,
 }
 
@@ -122,13 +121,17 @@ where
 {
     /// Create new SPI interface for communication with a display driver
     pub fn new(spi: SPI, dc: DC, cs: CS) -> Self {
-        Self { spi, dc, cs }
+        Self {
+            spi_no_cs: SPIInterfaceNoCS::new(spi, dc),
+            cs,
+        }
     }
 
     /// Consume the display interface and return
     /// the underlying peripherial driver and GPIO pins used by it
     pub fn release(self) -> (SPI, DC, CS) {
-        (self.spi, self.dc, self.cs)
+        let (spi, dc) = self.spi_no_cs.release();
+        (spi, dc, self.cs)
     }
 }
 
@@ -142,11 +145,7 @@ where
         // Assert chip select pin
         self.cs.set_low().map_err(|_| DisplayError::CSError)?;
 
-        // 1 = data, 0 = command
-        self.dc.set_low().map_err(|_| DisplayError::DCError)?;
-
-        // Send words over SPI
-        let err = send_u8(&mut self.spi, cmds);
+        let err = self.spi_no_cs.send_commands(cmds);
 
         // Deassert chip select pin
         self.cs.set_high().ok();
@@ -158,11 +157,7 @@ where
         // Assert chip select pin
         self.cs.set_low().map_err(|_| DisplayError::CSError)?;
 
-        // 1 = data, 0 = command
-        self.dc.set_high().map_err(|_| DisplayError::DCError)?;
-
-        // Send words over SPI
-        let err = send_u8(&mut self.spi, buf);
+        let err = self.spi_no_cs.send_data(buf);
 
         // Deassert chip select pin
         self.cs.set_high().ok();
