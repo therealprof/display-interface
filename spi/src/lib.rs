@@ -5,105 +5,31 @@
 use embedded_hal as hal;
 use hal::digital::v2::OutputPin;
 
-use display_interface::{DataFormat, DisplayError, WriteOnlyDataCommand};
+use display_interface::{DisplayError, WriteOnlyDataCommand};
 
-fn send_u8<SPI: hal::blocking::spi::Write<u8>>(
-    spi: &mut SPI,
-    words: DataFormat<'_>,
+fn send_iter(
+    spi: &mut impl hal::blocking::spi::Write<u8>,
+    iter: impl Iterator<Item = u8>,
 ) -> Result<(), DisplayError> {
-    match words {
-        DataFormat::U8(slice) => spi.write(slice).map_err(|_| DisplayError::BusWriteError),
-        DataFormat::U16(slice) => {
-            use byte_slice_cast::*;
-            spi.write(slice.as_byte_slice())
-                .map_err(|_| DisplayError::BusWriteError)
+    let mut buf = [0; 32];
+    let mut i = 0;
+
+    for v in iter {
+        buf[i] = v;
+        i += 1;
+
+        if i == buf.len() {
+            spi.write(&buf).map_err(|_| DisplayError::BusWriteError)?;
+            i = 0;
         }
-        DataFormat::U16LE(slice) => {
-            use byte_slice_cast::*;
-            for v in slice.as_mut() {
-                *v = v.to_le();
-            }
-            spi.write(slice.as_byte_slice())
-                .map_err(|_| DisplayError::BusWriteError)
-        }
-        DataFormat::U16BE(slice) => {
-            use byte_slice_cast::*;
-            for v in slice.as_mut() {
-                *v = v.to_be();
-            }
-            spi.write(slice.as_byte_slice())
-                .map_err(|_| DisplayError::BusWriteError)
-        }
-        DataFormat::U8Iter(iter) => {
-            let mut buf = [0; 32];
-            let mut i = 0;
-
-            for v in iter.into_iter() {
-                buf[i] = v;
-                i += 1;
-
-                if i == buf.len() {
-                    spi.write(&buf).map_err(|_| DisplayError::BusWriteError)?;
-                    i = 0;
-                }
-            }
-
-            if i > 0 {
-                spi.write(&buf[..i])
-                    .map_err(|_| DisplayError::BusWriteError)?;
-            }
-
-            Ok(())
-        }
-        DataFormat::U16LEIter(iter) => {
-            use byte_slice_cast::*;
-            let mut buf = [0; 32];
-            let mut i = 0;
-
-            for v in iter.map(u16::to_le) {
-                buf[i] = v;
-                i += 1;
-
-                if i == buf.len() {
-                    spi.write(&buf.as_byte_slice())
-                        .map_err(|_| DisplayError::BusWriteError)?;
-                    i = 0;
-                }
-            }
-
-            if i > 0 {
-                spi.write(&buf[..i].as_byte_slice())
-                    .map_err(|_| DisplayError::BusWriteError)?;
-            }
-
-            Ok(())
-        }
-        DataFormat::U16BEIter(iter) => {
-            use byte_slice_cast::*;
-            let mut buf = [0; 64];
-            let mut i = 0;
-            let len = buf.len();
-
-            for v in iter.map(u16::to_be) {
-                buf[i] = v;
-                i += 1;
-
-                if i == len {
-                    spi.write(&buf.as_byte_slice())
-                        .map_err(|_| DisplayError::BusWriteError)?;
-                    i = 0;
-                }
-            }
-
-            if i > 0 {
-                spi.write(&buf[..i].as_byte_slice())
-                    .map_err(|_| DisplayError::BusWriteError)?;
-            }
-
-            Ok(())
-        }
-        _ => Err(DisplayError::DataFormatNotImplemented),
     }
+
+    if i > 0 {
+        spi.write(&buf[..i])
+            .map_err(|_| DisplayError::BusWriteError)?;
+    }
+
+    Ok(())
 }
 
 /// SPI display interface.
@@ -139,7 +65,13 @@ where
     DC: OutputPin,
     CS: OutputPin,
 {
-    fn send_commands(&mut self, cmds: DataFormat<'_>) -> Result<(), DisplayError> {
+    type Word = u8;
+
+    #[inline]
+    fn send_command_iter(
+        &mut self,
+        iter: impl Iterator<Item = Self::Word>,
+    ) -> Result<(), DisplayError> {
         // Assert chip select pin
         self.cs.set_low().map_err(|_| DisplayError::CSError)?;
 
@@ -147,7 +79,7 @@ where
         self.dc.set_low().map_err(|_| DisplayError::DCError)?;
 
         // Send words over SPI
-        let err = send_u8(&mut self.spi, cmds);
+        let err = send_iter(&mut self.spi, iter);
 
         // Deassert chip select pin
         self.cs.set_high().ok();
@@ -155,7 +87,11 @@ where
         err
     }
 
-    fn send_data(&mut self, buf: DataFormat<'_>) -> Result<(), DisplayError> {
+    #[inline]
+    fn send_data_iter(
+        &mut self,
+        iter: impl Iterator<Item = Self::Word>,
+    ) -> Result<(), DisplayError> {
         // Assert chip select pin
         self.cs.set_low().map_err(|_| DisplayError::CSError)?;
 
@@ -163,7 +99,47 @@ where
         self.dc.set_high().map_err(|_| DisplayError::DCError)?;
 
         // Send words over SPI
-        let err = send_u8(&mut self.spi, buf);
+        let err = send_iter(&mut self.spi, iter);
+
+        // Deassert chip select pin
+        self.cs.set_high().ok();
+
+        err
+    }
+
+    #[inline]
+    fn send_command_slice(&mut self, slice: &[Self::Word]) -> Result<(), DisplayError> {
+        // Assert chip select pin
+        self.cs.set_low().map_err(|_| DisplayError::CSError)?;
+
+        // 1 = data, 0 = command
+        self.dc.set_low().map_err(|_| DisplayError::DCError)?;
+
+        // Send words over SPI
+        let err = self
+            .spi
+            .write(slice)
+            .map_err(|_| DisplayError::BusWriteError);
+
+        // Deassert chip select pin
+        self.cs.set_high().ok();
+
+        err
+    }
+
+    #[inline]
+    fn send_data_slice(&mut self, slice: &[Self::Word]) -> Result<(), DisplayError> {
+        // Assert chip select pin
+        self.cs.set_low().map_err(|_| DisplayError::CSError)?;
+
+        // 1 = data, 0 = command
+        self.dc.set_high().map_err(|_| DisplayError::DCError)?;
+
+        // Send words over SPI
+        let err = self
+            .spi
+            .write(slice)
+            .map_err(|_| DisplayError::BusWriteError);
 
         // Deassert chip select pin
         self.cs.set_high().ok();
@@ -202,19 +178,51 @@ where
     SPI: hal::blocking::spi::Write<u8>,
     DC: OutputPin,
 {
-    fn send_commands(&mut self, cmds: DataFormat<'_>) -> Result<(), DisplayError> {
+    type Word = u8;
+
+    #[inline]
+    fn send_command_iter(
+        &mut self,
+        iter: impl Iterator<Item = Self::Word>,
+    ) -> Result<(), DisplayError> {
         // 1 = data, 0 = command
         self.dc.set_low().map_err(|_| DisplayError::DCError)?;
 
         // Send words over SPI
-        send_u8(&mut self.spi, cmds)
+        send_iter(&mut self.spi, iter)
     }
 
-    fn send_data(&mut self, buf: DataFormat<'_>) -> Result<(), DisplayError> {
+    #[inline]
+    fn send_data_iter(
+        &mut self,
+        iter: impl Iterator<Item = Self::Word>,
+    ) -> Result<(), DisplayError> {
         // 1 = data, 0 = command
         self.dc.set_high().map_err(|_| DisplayError::DCError)?;
 
         // Send words over SPI
-        send_u8(&mut self.spi, buf)
+        send_iter(&mut self.spi, iter)
+    }
+
+    #[inline]
+    fn send_command_slice(&mut self, slice: &[Self::Word]) -> Result<(), DisplayError> {
+        // 1 = data, 0 = command
+        self.dc.set_low().map_err(|_| DisplayError::DCError)?;
+
+        // Send words over SPI
+        self.spi
+            .write(slice)
+            .map_err(|_| DisplayError::BusWriteError)
+    }
+
+    #[inline]
+    fn send_data_slice(&mut self, slice: &[Self::Word]) -> Result<(), DisplayError> {
+        // 1 = data, 0 = command
+        self.dc.set_high().map_err(|_| DisplayError::DCError)?;
+
+        // Send words over SPI
+        self.spi
+            .write(slice)
+            .map_err(|_| DisplayError::BusWriteError)
     }
 }
