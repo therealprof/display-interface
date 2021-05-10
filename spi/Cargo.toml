@@ -1,7 +1,7 @@
 [package]
 name = "display-interface-spi"
 description = "Generic SPI implementation for display interfaces"
-version = "0.4.0"
+version = "0.4.1"
 authors = ["Daniel Egger <daniel@eggers-club.de>"]
 repository = "https://github.com/therealprof/display-interface"
 documentation = "https://docs.rs/display-interface-spi"
