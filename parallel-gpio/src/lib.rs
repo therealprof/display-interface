@@ -217,3 +217,78 @@ where
         self.write_data(buf)
     }
 }
+
+/// Parallel 16 Bit communication interface
+///
+/// This interface implements a 16-Bit "8080" style write-only display interface using any
+/// 16-bit [OutputBus] implementation as well as one
+/// `OutputPin` for the data/command selection and one `OutputPin` for the write-enable flag.
+///
+/// All pins are supposed to be high-active, high for the D/C pin meaning "data" and the
+/// write-enable being pulled low before the setting of the bits and supposed to be sampled at a
+/// low to high edge.
+pub struct PGPIO16BitInterface<BUS, DC, WR> {
+    bus: BUS,
+    dc: DC,
+    wr: WR,
+}
+
+impl<BUS, DC, WR> PGPIO16BitInterface<BUS, DC, WR>
+where
+    BUS: OutputBus<Word = u16>,
+    DC: OutputPin,
+    WR: OutputPin,
+{
+    /// Create new parallel GPIO interface for communication with a display driver
+    pub fn new(bus: BUS, dc: DC, wr: WR) -> Self {
+        Self { bus, dc, wr }
+    }
+
+    /// Consume the display interface and return
+    /// the bus and GPIO pins used by it
+    pub fn release(self) -> (BUS, DC, WR) {
+        (self.bus, self.dc, self.wr)
+    }
+
+    fn write_iter(&mut self, iter: impl Iterator<Item = u16>) -> Result {
+        for value in iter {
+            self.wr.set_low().map_err(|_| DisplayError::BusWriteError)?;
+            self.bus.set_value(value)?;
+            self.wr
+                .set_high()
+                .map_err(|_| DisplayError::BusWriteError)?;
+        }
+
+        Ok(())
+    }
+
+    fn write_data(&mut self, data: DataFormat<'_>) -> Result {
+        match data {
+            DataFormat::U8(slice) => self.write_iter(slice.iter().copied().map(u16::from)),
+            DataFormat::U8Iter(iter) => self.write_iter(iter.map(u16::from)),
+            DataFormat::U16(slice) => self.write_iter(slice.iter().copied()),
+            DataFormat::U16BE(slice) => self.write_iter(slice.iter().copied()),
+            DataFormat::U16LE(slice) => self.write_iter(slice.iter().copied()),
+            DataFormat::U16BEIter(iter) => self.write_iter(iter),
+            DataFormat::U16LEIter(iter) => self.write_iter(iter),
+            _ => Err(DisplayError::DataFormatNotImplemented),
+        }
+    }
+}
+
+impl<BUS, DC, WR> WriteOnlyDataCommand for PGPIO16BitInterface<BUS, DC, WR>
+where
+    BUS: OutputBus<Word = u16>,
+    DC: OutputPin,
+    WR: OutputPin,
+{
+    fn send_commands(&mut self, cmds: DataFormat<'_>) -> Result {
+        self.dc.set_low().map_err(|_| DisplayError::DCError)?;
+        self.write_data(cmds)
+    }
+
+    fn send_data(&mut self, buf: DataFormat<'_>) -> Result {
+        self.dc.set_high().map_err(|_| DisplayError::DCError)?;
+        self.write_data(buf)
+    }
+}

@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## Added
 
 - parallel-gpio: Added `Generic16BitBus`
+- parallel-gpio: Added `PGPIO16BitInterface`
 
 ## [v0.4.1] - 2021-05-10
 
