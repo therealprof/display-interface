@@ -20,5 +20,3 @@ all-features = true
 [dependencies]
 embedded-hal = "0.2.3"
 display-interface = "0.4"
-byte-slice-cast = { version = "0.3.5", default-features = false }
-
