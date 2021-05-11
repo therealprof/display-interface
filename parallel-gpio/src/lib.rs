@@ -10,9 +10,9 @@ type Result<T = ()> = core::result::Result<T, DisplayError>;
 
 /// This trait represents the data pins of a parallel bus.
 ///
-/// See [Generic8BitBus] for a generic implementation.
+/// See [Generic8BitBus] and [Generic16BitBus] for generic implementations.
 pub trait OutputBus {
-    /// [u8] for 8-bit busses, [u16] for 16-bit busses, etc.
+    /// [u8] for 8-bit buses, [u16] for 16-bit buses, etc.
     type Word: Copy;
 
     fn set_value(&mut self, value: Self::Word) -> Result;
