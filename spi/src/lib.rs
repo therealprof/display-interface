@@ -7,10 +7,9 @@ use hal::digital::v2::OutputPin;
 
 use display_interface::{DataFormat, DisplayError, WriteOnlyDataCommand};
 
-fn send_u8<SPI: hal::blocking::spi::Write<u8>>(
-    spi: &mut SPI,
-    words: DataFormat<'_>,
-) -> Result<(), DisplayError> {
+type Result = core::result::Result<(), DisplayError>;
+
+fn send_u8<SPI: hal::blocking::spi::Write<u8>>(spi: &mut SPI, words: DataFormat<'_>) -> Result {
     match words {
         DataFormat::U8(slice) => spi.write(slice).map_err(|_| DisplayError::BusWriteError),
         DataFormat::U16(slice) => {
@@ -139,7 +138,7 @@ where
     DC: OutputPin,
     CS: OutputPin,
 {
-    fn send_commands(&mut self, cmds: DataFormat<'_>) -> Result<(), DisplayError> {
+    fn send_commands(&mut self, cmds: DataFormat<'_>) -> Result {
         // Assert chip select pin
         self.cs.set_low().map_err(|_| DisplayError::CSError)?;
 
@@ -155,7 +154,7 @@ where
         err
     }
 
-    fn send_data(&mut self, buf: DataFormat<'_>) -> Result<(), DisplayError> {
+    fn send_data(&mut self, buf: DataFormat<'_>) -> Result {
         // Assert chip select pin
         self.cs.set_low().map_err(|_| DisplayError::CSError)?;
 
@@ -202,7 +201,7 @@ where
     SPI: hal::blocking::spi::Write<u8>,
     DC: OutputPin,
 {
-    fn send_commands(&mut self, cmds: DataFormat<'_>) -> Result<(), DisplayError> {
+    fn send_commands(&mut self, cmds: DataFormat<'_>) -> Result {
         // 1 = data, 0 = command
         self.dc.set_low().map_err(|_| DisplayError::DCError)?;
 
@@ -210,7 +209,7 @@ where
         send_u8(&mut self.spi, cmds)
     }
 
-    fn send_data(&mut self, buf: DataFormat<'_>) -> Result<(), DisplayError> {
+    fn send_data(&mut self, buf: DataFormat<'_>) -> Result {
         // 1 = data, 0 = command
         self.dc.set_high().map_err(|_| DisplayError::DCError)?;
 
