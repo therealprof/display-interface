@@ -133,6 +133,18 @@ where
         let (spi, dc) = self.spi_no_cs.release();
         (spi, dc, self.cs)
     }
+
+    fn with_cs(&mut self, f: impl FnOnce(&mut SPIInterfaceNoCS<SPI, DC>) -> Result) -> Result {
+        // Assert chip select pin
+        self.cs.set_low().map_err(|_| DisplayError::CSError)?;
+
+        let result = f(&mut self.spi_no_cs);
+
+        // Deassert chip select pin
+        self.cs.set_high().ok();
+
+        result
+    }
 }
 
 impl<SPI, DC, CS> WriteOnlyDataCommand for SPIInterface<SPI, DC, CS>
@@ -142,27 +154,11 @@ where
     CS: OutputPin,
 {
     fn send_commands(&mut self, cmds: DataFormat<'_>) -> Result {
-        // Assert chip select pin
-        self.cs.set_low().map_err(|_| DisplayError::CSError)?;
-
-        let err = self.spi_no_cs.send_commands(cmds);
-
-        // Deassert chip select pin
-        self.cs.set_high().ok();
-
-        err
+        self.with_cs(|spi_no_cs| spi_no_cs.send_commands(cmds))
     }
 
     fn send_data(&mut self, buf: DataFormat<'_>) -> Result {
-        // Assert chip select pin
-        self.cs.set_low().map_err(|_| DisplayError::CSError)?;
-
-        let err = self.spi_no_cs.send_data(buf);
-
-        // Deassert chip select pin
-        self.cs.set_high().ok();
-
-        err
+        self.with_cs(|spi_no_cs| spi_no_cs.send_data(buf))
     }
 }
 
