@@ -18,6 +18,8 @@ pub enum DisplayError {
     InvalidFormatError,
     /// Unable to write to bus
     BusWriteError,
+    // Unable to read from bus
+    BusReadError,
     /// Unable to assert or de-assert data/command switching signal
     DCError,
     /// Unable to assert chip select signal
@@ -61,3 +63,5 @@ pub trait WriteOnlyDataCommand {
     /// Send pixel data to display
     fn send_data(&mut self, buf: DataFormat<'_>) -> Result<(), DisplayError>;
 }
+
+pub mod v2;

@@ -5,6 +5,7 @@
 use embedded_hal as hal;
 use hal::digital::v2::OutputPin;
 
+use display_interface::v2::{ReadInterface, WriteInterface, WriteMode};
 use display_interface::{DataFormat, DisplayError, WriteOnlyDataCommand};
 
 fn send_u8<SPI: hal::blocking::spi::Write<u8>>(
@@ -130,6 +131,95 @@ where
     /// the underlying peripherial driver and GPIO pins used by it
     pub fn release(self) -> (SPI, DC, CS) {
         (self.spi, self.dc, self.cs)
+    }
+}
+
+impl<SPI, DC, CS> ReadInterface<u8> for SPIInterface<SPI, DC, CS>
+where
+    SPI: hal::spi::FullDuplex<u8>,
+    DC: OutputPin,
+    CS: OutputPin,
+{
+    fn read_stream(&mut self, f: &mut dyn FnMut(u8) -> bool) -> Result<(), DisplayError> {
+        // Assert chip select pin
+        self.cs.set_low().map_err(|_| DisplayError::CSError)?;
+
+        // 1 = data for reads
+        self.dc.set_high().map_err(|_| DisplayError::DCError)?;
+
+        loop {
+            let b = self.spi.read().map_err(|_| DisplayError::BusReadError)?;
+            if !f(b) {
+                break;
+            }
+        }
+
+        // Deassert chip select pin
+        self.cs.set_high().map_err(|_| DisplayError::CSError)
+    }
+}
+
+impl<SPI, DC, CS> WriteInterface<u8> for SPIInterface<SPI, DC, CS>
+where
+    SPI: hal::blocking::spi::Write<u8>,
+    DC: OutputPin,
+    CS: OutputPin,
+{
+    fn write(&mut self, mode: WriteMode, buf: &[u8]) -> Result<(), DisplayError> {
+        // Assert chip select pin
+        self.cs.set_low().map_err(|_| DisplayError::CSError)?;
+
+        // 1 = data, 0 = command
+        match mode {
+            WriteMode::Command => {
+                self.dc.set_low().map_err(|_| DisplayError::DCError)?;
+            }
+            WriteMode::Data => {
+                self.dc.set_high().map_err(|_| DisplayError::DCError)?;
+            }
+        }
+
+        self.spi
+            .write(buf)
+            .map_err(|_| DisplayError::BusWriteError)?;
+
+        // Deassert chip select pin
+        self.cs.set_high().map_err(|_| DisplayError::CSError)
+    }
+
+    fn write_stream<'a>(
+        &mut self,
+        mode: WriteMode,
+        func: &mut dyn FnMut() -> Option<&'a u8>,
+    ) -> Result<(), DisplayError> {
+        // Assert chip select pin
+        self.cs.set_low().map_err(|_| DisplayError::CSError)?;
+
+        // 1 = data, 0 = command
+        match mode {
+            WriteMode::Command => {
+                self.dc.set_low().map_err(|_| DisplayError::DCError)?;
+            }
+            WriteMode::Data => {
+                self.dc.set_high().map_err(|_| DisplayError::DCError)?;
+            }
+        }
+
+        loop {
+            match func() {
+                Some(b) => {
+                    self.spi
+                        .write(&[*b])
+                        .map_err(|_| DisplayError::BusWriteError)?;
+                }
+                None => {
+                    break;
+                }
+            }
+        }
+
+        // Deassert chip select pin
+        self.cs.set_high().map_err(|_| DisplayError::CSError)
     }
 }
 
