@@ -2,15 +2,14 @@
 
 //! Generic SPI interface for display drivers
 
-use embedded_hal as hal;
-use hal::digital::v2::OutputPin;
+use embedded_hal::blocking::spi;
+use embedded_hal::digital::v2::OutputPin;
 
 use display_interface::{DataFormat, DisplayError, WriteOnlyDataCommand};
 
-fn send_u8<SPI: hal::blocking::spi::Write<u8>>(
-    spi: &mut SPI,
-    words: DataFormat<'_>,
-) -> Result<(), DisplayError> {
+type Result = core::result::Result<(), DisplayError>;
+
+fn send_u8<SPI: spi::Write<u8>>(spi: &mut SPI, words: DataFormat<'_>) -> Result {
     match words {
         DataFormat::U8(slice) => spi.write(slice).map_err(|_| DisplayError::BusWriteError),
         DataFormat::U16(slice) => {
@@ -110,65 +109,56 @@ fn send_u8<SPI: hal::blocking::spi::Write<u8>>(
 ///
 /// This combines the SPI peripheral and a data/command as well as a chip-select pin
 pub struct SPIInterface<SPI, DC, CS> {
-    spi: SPI,
-    dc: DC,
+    spi_no_cs: SPIInterfaceNoCS<SPI, DC>,
     cs: CS,
 }
 
 impl<SPI, DC, CS> SPIInterface<SPI, DC, CS>
 where
-    SPI: hal::blocking::spi::Write<u8>,
+    SPI: spi::Write<u8>,
     DC: OutputPin,
     CS: OutputPin,
 {
     /// Create new SPI interface for communication with a display driver
     pub fn new(spi: SPI, dc: DC, cs: CS) -> Self {
-        Self { spi, dc, cs }
+        Self {
+            spi_no_cs: SPIInterfaceNoCS::new(spi, dc),
+            cs,
+        }
     }
 
     /// Consume the display interface and return
     /// the underlying peripherial driver and GPIO pins used by it
     pub fn release(self) -> (SPI, DC, CS) {
-        (self.spi, self.dc, self.cs)
+        let (spi, dc) = self.spi_no_cs.release();
+        (spi, dc, self.cs)
+    }
+
+    fn with_cs(&mut self, f: impl FnOnce(&mut SPIInterfaceNoCS<SPI, DC>) -> Result) -> Result {
+        // Assert chip select pin
+        self.cs.set_low().map_err(|_| DisplayError::CSError)?;
+
+        let result = f(&mut self.spi_no_cs);
+
+        // Deassert chip select pin
+        self.cs.set_high().ok();
+
+        result
     }
 }
 
 impl<SPI, DC, CS> WriteOnlyDataCommand for SPIInterface<SPI, DC, CS>
 where
-    SPI: hal::blocking::spi::Write<u8>,
+    SPI: spi::Write<u8>,
     DC: OutputPin,
     CS: OutputPin,
 {
-    fn send_commands(&mut self, cmds: DataFormat<'_>) -> Result<(), DisplayError> {
-        // Assert chip select pin
-        self.cs.set_low().map_err(|_| DisplayError::CSError)?;
-
-        // 1 = data, 0 = command
-        self.dc.set_low().map_err(|_| DisplayError::DCError)?;
-
-        // Send words over SPI
-        let err = send_u8(&mut self.spi, cmds);
-
-        // Deassert chip select pin
-        self.cs.set_high().ok();
-
-        err
+    fn send_commands(&mut self, cmds: DataFormat<'_>) -> Result {
+        self.with_cs(|spi_no_cs| spi_no_cs.send_commands(cmds))
     }
 
-    fn send_data(&mut self, buf: DataFormat<'_>) -> Result<(), DisplayError> {
-        // Assert chip select pin
-        self.cs.set_low().map_err(|_| DisplayError::CSError)?;
-
-        // 1 = data, 0 = command
-        self.dc.set_high().map_err(|_| DisplayError::DCError)?;
-
-        // Send words over SPI
-        let err = send_u8(&mut self.spi, buf);
-
-        // Deassert chip select pin
-        self.cs.set_high().ok();
-
-        err
+    fn send_data(&mut self, buf: DataFormat<'_>) -> Result {
+        self.with_cs(|spi_no_cs| spi_no_cs.send_data(buf))
     }
 }
 
@@ -182,7 +172,7 @@ pub struct SPIInterfaceNoCS<SPI, DC> {
 
 impl<SPI, DC> SPIInterfaceNoCS<SPI, DC>
 where
-    SPI: hal::blocking::spi::Write<u8>,
+    SPI: spi::Write<u8>,
     DC: OutputPin,
 {
     /// Create new SPI interface for communciation with a display driver
@@ -199,10 +189,10 @@ where
 
 impl<SPI, DC> WriteOnlyDataCommand for SPIInterfaceNoCS<SPI, DC>
 where
-    SPI: hal::blocking::spi::Write<u8>,
+    SPI: spi::Write<u8>,
     DC: OutputPin,
 {
-    fn send_commands(&mut self, cmds: DataFormat<'_>) -> Result<(), DisplayError> {
+    fn send_commands(&mut self, cmds: DataFormat<'_>) -> Result {
         // 1 = data, 0 = command
         self.dc.set_low().map_err(|_| DisplayError::DCError)?;
 
@@ -210,7 +200,7 @@ where
         send_u8(&mut self.spi, cmds)
     }
 
-    fn send_data(&mut self, buf: DataFormat<'_>) -> Result<(), DisplayError> {
+    fn send_data(&mut self, buf: DataFormat<'_>) -> Result {
         // 1 = data, 0 = command
         self.dc.set_high().map_err(|_| DisplayError::DCError)?;
 
