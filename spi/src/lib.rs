@@ -2,14 +2,14 @@
 
 //! Generic SPI interface for display drivers
 
-use embedded_hal::blocking::spi;
-use embedded_hal::digital::v2::OutputPin;
+use embedded_hal::spi::blocking::Write;
+use embedded_hal::digital::blocking::OutputPin;
 
 use display_interface::{DataFormat, DisplayError, WriteOnlyDataCommand};
 
 type Result = core::result::Result<(), DisplayError>;
 
-fn send_u8<SPI: spi::Write<u8>>(spi: &mut SPI, words: DataFormat<'_>) -> Result {
+fn send_u8<SPI: Write<u8>>(spi: &mut SPI, words: DataFormat<'_>) -> Result {
     match words {
         DataFormat::U8(slice) => spi.write(slice).map_err(|_| DisplayError::BusWriteError),
         DataFormat::U16(slice) => {
@@ -115,7 +115,7 @@ pub struct SPIInterface<SPI, DC, CS> {
 
 impl<SPI, DC, CS> SPIInterface<SPI, DC, CS>
 where
-    SPI: spi::Write<u8>,
+    SPI: Write<u8>,
     DC: OutputPin,
     CS: OutputPin,
 {
@@ -149,7 +149,7 @@ where
 
 impl<SPI, DC, CS> WriteOnlyDataCommand for SPIInterface<SPI, DC, CS>
 where
-    SPI: spi::Write<u8>,
+    SPI: Write<u8>,
     DC: OutputPin,
     CS: OutputPin,
 {
@@ -172,7 +172,7 @@ pub struct SPIInterfaceNoCS<SPI, DC> {
 
 impl<SPI, DC> SPIInterfaceNoCS<SPI, DC>
 where
-    SPI: spi::Write<u8>,
+    SPI: Write<u8>,
     DC: OutputPin,
 {
     /// Create new SPI interface for communciation with a display driver
@@ -189,7 +189,7 @@ where
 
 impl<SPI, DC> WriteOnlyDataCommand for SPIInterfaceNoCS<SPI, DC>
 where
-    SPI: spi::Write<u8>,
+    SPI: Write<u8>,
     DC: OutputPin,
 {
     fn send_commands(&mut self, cmds: DataFormat<'_>) -> Result {
