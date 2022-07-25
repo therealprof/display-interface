@@ -2,8 +2,8 @@
 
 //! Generic SPI interface for display drivers
 
-use embedded_hal::spi::blocking::Write;
 use embedded_hal::digital::blocking::OutputPin;
+use embedded_hal::spi::blocking::Write;
 
 use display_interface::{DataFormat, DisplayError, WriteOnlyDataCommand};
 
