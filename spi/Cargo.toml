@@ -18,6 +18,6 @@ edition = "2018"
 all-features = true
 
 [dependencies]
-embedded-hal = "1.0.0-alpha.7"
+embedded-hal = "1.0.0-alpha.8"
 display-interface = "0.4.1"
 byte-slice-cast = { version = "0.3.5", default-features = false }
