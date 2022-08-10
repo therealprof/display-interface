@@ -9,106 +9,57 @@ use embedded_hal::{
 
 use display_interface::{DataFormat, DisplayError, WriteOnlyDataCommand};
 
-type Result = core::result::Result<(), DisplayError>;
+type Result<T = (), E = DisplayError> = core::result::Result<T, E>;
 
-fn send_u8<SPI>(spi: &mut SPI, words: DataFormat<'_>) -> Result
-where
-    SPI: SpiDevice,
-    SPI::Bus: SpiBusWrite,
-{
-    match words {
-        DataFormat::U8(slice) => spi.write(slice).map_err(|_| DisplayError::BusWriteError),
-        DataFormat::U16(slice) => {
-            use byte_slice_cast::*;
-            spi.write(slice.as_byte_slice())
-                .map_err(|_| DisplayError::BusWriteError)
+fn send_u8_iter<SPI: SpiBusWrite>(
+    mut spi: SPI,
+    iter: impl Iterator<Item = u8>,
+) -> Result<(), SPI::Error> {
+    let mut buf = [0; 32];
+    let mut i = 0;
+
+    for v in iter {
+        buf[i] = v;
+        i += 1;
+
+        if i == buf.len() {
+            spi.write(&buf)?;
+            i = 0;
         }
+    }
+
+    if i > 0 {
+        spi.write(&buf[..i])?;
+    }
+
+    Ok(())
+}
+
+fn send_dataformat<SPI: SpiBusWrite>(mut spi: SPI, data: DataFormat<'_>) -> Result {
+    use byte_slice_cast::AsByteSlice;
+
+    match data {
+        DataFormat::U8(slice) => spi.write(slice),
+        DataFormat::U16(slice) => spi.write(slice.as_byte_slice()),
         DataFormat::U16LE(slice) => {
-            use byte_slice_cast::*;
-            for v in slice.as_mut() {
+            for v in slice.iter_mut() {
                 *v = v.to_le();
             }
             spi.write(slice.as_byte_slice())
-                .map_err(|_| DisplayError::BusWriteError)
         }
         DataFormat::U16BE(slice) => {
-            use byte_slice_cast::*;
-            for v in slice.as_mut() {
+            for v in slice.iter_mut() {
                 *v = v.to_be();
             }
             spi.write(slice.as_byte_slice())
-                .map_err(|_| DisplayError::BusWriteError)
         }
-        DataFormat::U8Iter(iter) => {
-            let mut buf = [0; 32];
-            let mut i = 0;
+        DataFormat::U8Iter(iter) => send_u8_iter(spi, iter),
+        DataFormat::U16LEIter(iter) => send_u8_iter(spi, iter.flat_map(u16::to_le_bytes)),
+        DataFormat::U16BEIter(iter) => send_u8_iter(spi, iter.flat_map(u16::to_be_bytes)),
 
-            for v in iter.into_iter() {
-                buf[i] = v;
-                i += 1;
-
-                if i == buf.len() {
-                    spi.write(&buf).map_err(|_| DisplayError::BusWriteError)?;
-                    i = 0;
-                }
-            }
-
-            if i > 0 {
-                spi.write(&buf[..i])
-                    .map_err(|_| DisplayError::BusWriteError)?;
-            }
-
-            Ok(())
-        }
-        DataFormat::U16LEIter(iter) => {
-            use byte_slice_cast::*;
-            let mut buf = [0; 32];
-            let mut i = 0;
-
-            for v in iter.map(u16::to_le) {
-                buf[i] = v;
-                i += 1;
-
-                if i == buf.len() {
-                    spi.write(&buf.as_byte_slice())
-                        .map_err(|_| DisplayError::BusWriteError)?;
-                    i = 0;
-                }
-            }
-
-            if i > 0 {
-                spi.write(&buf[..i].as_byte_slice())
-                    .map_err(|_| DisplayError::BusWriteError)?;
-            }
-
-            Ok(())
-        }
-        DataFormat::U16BEIter(iter) => {
-            use byte_slice_cast::*;
-            let mut buf = [0; 64];
-            let mut i = 0;
-            let len = buf.len();
-
-            for v in iter.map(u16::to_be) {
-                buf[i] = v;
-                i += 1;
-
-                if i == len {
-                    spi.write(&buf.as_byte_slice())
-                        .map_err(|_| DisplayError::BusWriteError)?;
-                    i = 0;
-                }
-            }
-
-            if i > 0 {
-                spi.write(&buf[..i].as_byte_slice())
-                    .map_err(|_| DisplayError::BusWriteError)?;
-            }
-
-            Ok(())
-        }
-        _ => Err(DisplayError::DataFormatNotImplemented),
+        _ => return Err(DisplayError::DataFormatNotImplemented),
     }
+    .map_err(|_| DisplayError::BusWriteError)
 }
 
 /// SPI display interface.
@@ -207,7 +158,9 @@ where
         self.dc.set_low().map_err(|_| DisplayError::DCError)?;
 
         // Send words over SPI
-        send_u8(&mut self.spi, cmds)
+        self.spi
+            .transaction(|spi| Ok(send_dataformat(spi, cmds)))
+            .map_err(|_| DisplayError::BusWriteError)?
     }
 
     fn send_data(&mut self, buf: DataFormat<'_>) -> Result {
@@ -215,6 +168,8 @@ where
         self.dc.set_high().map_err(|_| DisplayError::DCError)?;
 
         // Send words over SPI
-        send_u8(&mut self.spi, buf)
+        self.spi
+            .transaction(|spi| Ok(send_dataformat(spi, buf)))
+            .map_err(|_| DisplayError::BusWriteError)?
     }
 }
