@@ -126,8 +126,7 @@ pub struct SPIInterfaceNoCS<SPI, DC> {
 
 impl<SPI, DC> SPIInterfaceNoCS<SPI, DC>
 where
-    SPI: SpiDevice,
-    SPI::Bus: SpiBusWrite,
+    SPI: SpiBusWrite,
     DC: OutputPin,
 {
     /// Create new SPI interface for communciation with a display driver
@@ -144,27 +143,28 @@ where
 
 impl<SPI, DC> WriteOnlyDataCommand for SPIInterfaceNoCS<SPI, DC>
 where
-    SPI: SpiDevice,
-    SPI::Bus: SpiBusWrite,
+    SPI: SpiBusWrite,
     DC: OutputPin,
 {
     fn send_commands(&mut self, cmds: DataFormat<'_>) -> Result {
+        // Flush before changing DC
+        self.spi.flush().map_err(|_| DisplayError::BusWriteError)?;
+
         // 1 = data, 0 = command
         self.dc.set_low().map_err(|_| DisplayError::DCError)?;
 
         // Send words over SPI
-        self.spi
-            .transaction(|spi| Ok(send_dataformat(spi, cmds)))
-            .map_err(|_| DisplayError::BusWriteError)?
+        send_dataformat(&mut self.spi, cmds)
     }
 
     fn send_data(&mut self, buf: DataFormat<'_>) -> Result {
+        // Flush before changing DC
+        self.spi.flush().map_err(|_| DisplayError::BusWriteError)?;
+
         // 1 = data, 0 = command
         self.dc.set_high().map_err(|_| DisplayError::DCError)?;
 
         // Send words over SPI
-        self.spi
-            .transaction(|spi| Ok(send_dataformat(spi, buf)))
-            .map_err(|_| DisplayError::BusWriteError)?
+        send_dataformat(&mut self.spi, buf)
     }
 }
