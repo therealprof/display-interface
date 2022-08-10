@@ -64,60 +64,55 @@ fn send_dataformat<SPI: SpiBusWrite>(mut spi: SPI, data: DataFormat<'_>) -> Resu
 
 /// SPI display interface.
 ///
-/// This combines the SPI peripheral and a data/command as well as a chip-select pin
-pub struct SPIInterface<SPI, DC, CS> {
-    spi_no_cs: SPIInterfaceNoCS<SPI, DC>,
-    cs: CS,
+/// This combines the SPI peripheral and a data/command pin.
+/// Chip-select is automatically handled by the [`SpiDevice`] implementation.
+pub struct SPIInterface<SPI, DC> {
+    spi: SPI,
+    dc: DC,
 }
 
-impl<SPI, DC, CS> SPIInterface<SPI, DC, CS>
+impl<SPI, DC> SPIInterface<SPI, DC>
 where
     SPI: SpiDevice,
     SPI::Bus: SpiBusWrite,
     DC: OutputPin,
-    CS: OutputPin,
 {
     /// Create new SPI interface for communication with a display driver
-    pub fn new(spi: SPI, dc: DC, cs: CS) -> Self {
-        Self {
-            spi_no_cs: SPIInterfaceNoCS::new(spi, dc),
-            cs,
-        }
+    pub fn new(spi: SPI, dc: DC) -> Self {
+        Self { spi, dc }
     }
 
     /// Consume the display interface and return
     /// the underlying peripherial driver and GPIO pins used by it
-    pub fn release(self) -> (SPI, DC, CS) {
-        let (spi, dc) = self.spi_no_cs.release();
-        (spi, dc, self.cs)
-    }
-
-    fn with_cs(&mut self, f: impl FnOnce(&mut SPIInterfaceNoCS<SPI, DC>) -> Result) -> Result {
-        // Assert chip select pin
-        self.cs.set_low().map_err(|_| DisplayError::CSError)?;
-
-        let result = f(&mut self.spi_no_cs);
-
-        // Deassert chip select pin
-        self.cs.set_high().ok();
-
-        result
+    pub fn release(self) -> (SPI, DC) {
+        (self.spi, self.dc)
     }
 }
 
-impl<SPI, DC, CS> WriteOnlyDataCommand for SPIInterface<SPI, DC, CS>
+impl<SPI, DC> WriteOnlyDataCommand for SPIInterface<SPI, DC>
 where
     SPI: SpiDevice,
     SPI::Bus: SpiBusWrite,
     DC: OutputPin,
-    CS: OutputPin,
 {
     fn send_commands(&mut self, cmds: DataFormat<'_>) -> Result {
-        self.with_cs(|spi_no_cs| spi_no_cs.send_commands(cmds))
+        // 1 = data, 0 = command
+        self.dc.set_low().map_err(|_| DisplayError::DCError)?;
+
+        // Send words over SPI
+        self.spi
+            .transaction(|spi| Ok(send_dataformat(spi, cmds)))
+            .map_err(|_| DisplayError::BusWriteError)?
     }
 
     fn send_data(&mut self, buf: DataFormat<'_>) -> Result {
-        self.with_cs(|spi_no_cs| spi_no_cs.send_data(buf))
+        // 1 = data, 0 = command
+        self.dc.set_high().map_err(|_| DisplayError::DCError)?;
+
+        // Send words over SPI
+        self.spi
+            .transaction(|spi| Ok(send_dataformat(spi, buf)))
+            .map_err(|_| DisplayError::BusWriteError)?
     }
 }
 
