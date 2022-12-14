@@ -143,17 +143,21 @@ generic_bus! {
 /// All pins are supposed to be high-active, high for the D/C pin meaning "data" and the
 /// write-enable being pulled low before the setting of the bits and supposed to be sampled at a
 /// low to high edge.
-pub struct PGPIO8BitInterface<BUS, DC, WR> {
+pub struct PGPIO8BitInterface<BUS, DC, WR, RD, CS> {
     bus: BUS,
     dc: DC,
     wr: WR,
+    rd: RD,
+    cs: CS,
 }
 
-impl<BUS, DC, WR> PGPIO8BitInterface<BUS, DC, WR>
+impl<BUS, DC, WR, RD, CS>  PGPIO8BitInterface<BUS, DC, WR, RD, CS> 
 where
     BUS: OutputBus<Word = u8>,
     DC: OutputPin,
     WR: OutputPin,
+    RD: OutputPin,
+    CS: OutputPin,
 {
     /// Create new parallel GPIO interface for communication with a display driver
     pub fn new(bus: BUS, dc: DC, wr: WR) -> Self {
@@ -168,11 +172,14 @@ where
 
     fn write_iter(&mut self, iter: impl Iterator<Item = u8>) -> Result {
         for value in iter {
+            self.cs.set_low().map_err(|_| DisplayError::BusWriteError)?;
+            self.rd.set_high().map_err(|_| DisplayError::BusWriteError)?;
             self.wr.set_low().map_err(|_| DisplayError::BusWriteError)?;
             self.bus.set_value(value)?;
             self.wr
                 .set_high()
                 .map_err(|_| DisplayError::BusWriteError)?;
+            self.cs.set_low().map_err(|_| DisplayError::BusWriteError)?;
         }
 
         Ok(())
@@ -201,11 +208,13 @@ where
     }
 }
 
-impl<BUS, DC, WR> WriteOnlyDataCommand for PGPIO8BitInterface<BUS, DC, WR>
+impl<BUS, DC, WR, RD, CS> WriteOnlyDataCommand for PGPIO8BitInterface<BUS, DC, WR, RD, CS>
 where
     BUS: OutputBus<Word = u8>,
     DC: OutputPin,
     WR: OutputPin,
+    RD: OutputPin,
+    CS: OutputPin,
 {
     fn send_commands(&mut self, cmds: DataFormat<'_>) -> Result {
         self.dc.set_low().map_err(|_| DisplayError::DCError)?;
@@ -227,17 +236,21 @@ where
 /// All pins are supposed to be high-active, high for the D/C pin meaning "data" and the
 /// write-enable being pulled low before the setting of the bits and supposed to be sampled at a
 /// low to high edge.
-pub struct PGPIO16BitInterface<BUS, DC, WR> {
+pub struct PGPIO16BitInterface<BUS, DC, WR, RD, CS>{
     bus: BUS,
     dc: DC,
     wr: WR,
+    rd: RD,
+    cs: CS,
 }
 
-impl<BUS, DC, WR> PGPIO16BitInterface<BUS, DC, WR>
+impl<BUS, DC, WR, RD, CS> PGPIO16BitInterface<BUS, DC, WR, RD, CS>
 where
     BUS: OutputBus<Word = u16>,
     DC: OutputPin,
     WR: OutputPin,
+    RD: OutputPin,
+    CS: OutputPin,
 {
     /// Create new parallel GPIO interface for communication with a display driver
     pub fn new(bus: BUS, dc: DC, wr: WR) -> Self {
@@ -252,11 +265,14 @@ where
 
     fn write_iter(&mut self, iter: impl Iterator<Item = u16>) -> Result {
         for value in iter {
+            self.cs.set_low().map_err(|_| DisplayError::BusWriteError)?;
+            self.rd.set_high().map_err(|_| DisplayError::BusWriteError)?;
             self.wr.set_low().map_err(|_| DisplayError::BusWriteError)?;
             self.bus.set_value(value)?;
             self.wr
                 .set_high()
                 .map_err(|_| DisplayError::BusWriteError)?;
+            self.cs.set_high().map_err(|_| DisplayError::BusWriteError)?;
         }
 
         Ok(())
@@ -276,11 +292,13 @@ where
     }
 }
 
-impl<BUS, DC, WR> WriteOnlyDataCommand for PGPIO16BitInterface<BUS, DC, WR>
+impl<BUS, DC, WR, RD, CS> WriteOnlyDataCommand for PGPIO16BitInterface<BUS, DC, WR, RD, CS>
 where
     BUS: OutputBus<Word = u16>,
     DC: OutputPin,
     WR: OutputPin,
+    RD: OutputPin,
+    CS: OutputPin,
 {
     fn send_commands(&mut self, cmds: DataFormat<'_>) -> Result {
         self.dc.set_low().map_err(|_| DisplayError::DCError)?;
