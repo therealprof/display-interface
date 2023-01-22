@@ -111,6 +111,62 @@ where
     }
 }
 
+/// Borrowed SPI display interface.
+///
+/// Identical to [`SPIInterface`], but doesn't take ownership of the peripherals.
+pub struct BorrowedSPIInterface<'spi, 'dc, 'cs, SPI, DC, CS> {
+    spi_no_cs: BorrowedSPIInterfaceNoCS<'spi, 'dc, SPI, DC>,
+    cs: &'cs mut CS,
+}
+
+impl<'spi, 'dc, 'cs, SPI, DC, CS> BorrowedSPIInterface<'spi, 'dc, 'cs, SPI, DC, CS>
+where
+    SPI: SpiDevice,
+    SPI::Bus: SpiBusWrite,
+    DC: OutputPin,
+    CS: OutputPin,
+{
+    /// Create new SPI interface for communication with a display driver
+    pub fn new(spi: &'spi mut SPI, dc: &'dc mut DC, cs: &'cs mut CS) -> Self {
+        Self {
+            spi_no_cs: BorrowedSPIInterfaceNoCS::new(spi, dc),
+            cs,
+        }
+    }
+
+    fn with_cs(
+        &mut self,
+        f: impl FnOnce(&mut BorrowedSPIInterfaceNoCS<SPI, DC>) -> Result,
+    ) -> Result {
+        // Assert chip select pin
+        self.cs.set_low().map_err(|_| DisplayError::CSError)?;
+
+        let result = f(&mut self.spi_no_cs);
+
+        // Deassert chip select pin
+        self.cs.set_high().ok();
+
+        result
+    }
+}
+
+impl<'spi, 'dc, 'cs, SPI, DC, CS> WriteOnlyDataCommand
+    for BorrowedSPIInterface<'spi, 'dc, 'cs, SPI, DC, CS>
+where
+    SPI: SpiDevice,
+    SPI::Bus: SpiBusWrite,
+    DC: OutputPin,
+    CS: OutputPin,
+{
+    fn send_commands(&mut self, cmds: DataFormat<'_>) -> Result {
+        self.with_cs(|spi_no_cs| spi_no_cs.send_commands(cmds))
+    }
+
+    fn send_data(&mut self, buf: DataFormat<'_>) -> Result {
+        self.with_cs(|spi_no_cs| spi_no_cs.send_data(buf))
+    }
+}
+
 /// SPI display interface.
 ///
 /// This combines the SPI peripheral and a data/command as well as a chip-select pin
@@ -141,16 +197,11 @@ where
         (spi, dc, self.cs)
     }
 
-    fn with_cs(&mut self, f: impl FnOnce(&mut SPIInterfaceNoCS<SPI, DC>) -> Result) -> Result {
-        // Assert chip select pin
-        self.cs.set_low().map_err(|_| DisplayError::CSError)?;
-
-        let result = f(&mut self.spi_no_cs);
-
-        // Deassert chip select pin
-        self.cs.set_high().ok();
-
-        result
+    fn borrow(&mut self) -> BorrowedSPIInterface<SPI, DC, CS> {
+        BorrowedSPIInterface {
+            spi_no_cs: self.spi_no_cs.borrow(),
+            cs: &mut self.cs,
+        }
     }
 }
 
@@ -162,11 +213,54 @@ where
     CS: OutputPin,
 {
     fn send_commands(&mut self, cmds: DataFormat<'_>) -> Result {
-        self.with_cs(|spi_no_cs| spi_no_cs.send_commands(cmds))
+        self.borrow().send_commands(cmds)
     }
 
     fn send_data(&mut self, buf: DataFormat<'_>) -> Result {
-        self.with_cs(|spi_no_cs| spi_no_cs.send_data(buf))
+        self.borrow().send_data(buf)
+    }
+}
+
+/// Borrowed SPI display interface.
+///
+/// Identical to [`SPIInterfaceNoCS`], but doesn't take ownership of the peripherals.
+pub struct BorrowedSPIInterfaceNoCS<'spi, 'dc, SPI, DC> {
+    spi: &'spi mut SPI,
+    dc: &'dc mut DC,
+}
+
+impl<'spi, 'dc, SPI, DC> BorrowedSPIInterfaceNoCS<'spi, 'dc, SPI, DC>
+where
+    SPI: SpiDevice,
+    SPI::Bus: SpiBusWrite,
+    DC: OutputPin,
+{
+    /// Create new SPI interface for communciation with a display driver
+    pub fn new(spi: &'spi mut SPI, dc: &'dc mut DC) -> Self {
+        Self { spi, dc }
+    }
+}
+
+impl<'spi, 'dc, SPI, DC> WriteOnlyDataCommand for BorrowedSPIInterfaceNoCS<'spi, 'dc, SPI, DC>
+where
+    SPI: SpiDevice,
+    SPI::Bus: SpiBusWrite,
+    DC: OutputPin,
+{
+    fn send_commands(&mut self, cmds: DataFormat<'_>) -> Result {
+        // 1 = data, 0 = command
+        self.dc.set_low().map_err(|_| DisplayError::DCError)?;
+
+        // Send words over SPI
+        send_u8(self.spi, cmds)
+    }
+
+    fn send_data(&mut self, buf: DataFormat<'_>) -> Result {
+        // 1 = data, 0 = command
+        self.dc.set_high().map_err(|_| DisplayError::DCError)?;
+
+        // Send words over SPI
+        send_u8(self.spi, buf)
     }
 }
 
@@ -194,6 +288,13 @@ where
     pub fn release(self) -> (SPI, DC) {
         (self.spi, self.dc)
     }
+
+    fn borrow(&mut self) -> BorrowedSPIInterfaceNoCS<SPI, DC> {
+        BorrowedSPIInterfaceNoCS {
+            spi: &mut self.spi,
+            dc: &mut self.dc,
+        }
+    }
 }
 
 impl<SPI, DC> WriteOnlyDataCommand for SPIInterfaceNoCS<SPI, DC>
@@ -203,18 +304,10 @@ where
     DC: OutputPin,
 {
     fn send_commands(&mut self, cmds: DataFormat<'_>) -> Result {
-        // 1 = data, 0 = command
-        self.dc.set_low().map_err(|_| DisplayError::DCError)?;
-
-        // Send words over SPI
-        send_u8(&mut self.spi, cmds)
+        self.borrow().send_commands(cmds)
     }
 
     fn send_data(&mut self, buf: DataFormat<'_>) -> Result {
-        // 1 = data, 0 = command
-        self.dc.set_high().map_err(|_| DisplayError::DCError)?;
-
-        // Send words over SPI
-        send_u8(&mut self.spi, buf)
+        self.borrow().send_data(buf)
     }
 }
