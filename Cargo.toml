@@ -17,7 +17,7 @@ all-features = true
 
 [workspace]
 
-members = [".", "i2c", "parallel-gpio", "spi", "spi_async"]
+members = [".", "i2c", "parallel-gpio", "spi"]
 
 [patch.crates-io]
 display-interface = { version = "0.4", path = "." }
