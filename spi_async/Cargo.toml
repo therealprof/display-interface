@@ -1,0 +1,22 @@
+[package]
+name = "display-interface-spi-async"
+description = "Generic SPI implementation for display interfaces"
+version = "0.5.0-alpha.1"
+authors = ["Daniel Egger <daniel@eggers-club.de>"]
+repository = "https://github.com/therealprof/display-interface"
+documentation = "https://docs.rs/display-interface-spi"
+categories = ["no-std"]
+keywords = ["graphics", "display", "embedded"]
+readme = "README.md"
+license = "MIT OR Apache-2.0"
+exclude = [".gitignore"]
+edition = "2018"
+
+[package.metadata.docs.rs]
+all-features = true
+
+[dependencies]
+embedded-hal = "0.2.7"
+embedded-hal-async = "0.2.0-alpha.0"
+display-interface = { path = "../", version = "0.4.2", features = ["async"] }
+byte-slice-cast = { version = "1.2.2", default-features = false }

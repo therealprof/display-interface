@@ -1,4 +1,9 @@
 #![no_std]
+#![cfg_attr(
+    feature = "async",
+    allow(incomplete_features),
+    feature(async_fn_in_trait, impl_trait_projections)
+)]
 
 //! A generic display interface
 //!
@@ -60,4 +65,14 @@ pub trait WriteOnlyDataCommand {
 
     /// Send pixel data to display
     fn send_data(&mut self, buf: DataFormat<'_>) -> Result<(), DisplayError>;
+}
+
+#[cfg(feature = "async")]
+
+pub trait AsyncWriteOnlyDataCommand {
+    /// Send a batch of commands to display
+    async fn send_commands(&mut self, cmd: DataFormat<'_>) -> Result<(), DisplayError>;
+
+    /// Send pixel data to display
+    async fn send_data(&mut self, buf: DataFormat<'_>) -> Result<(), DisplayError>;
 }

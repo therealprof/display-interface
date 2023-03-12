@@ -1,7 +1,7 @@
 [package]
 name = "display-interface"
 description = "Traits for interfaces used to drive displays"
-version = "0.4.1"
+version = "0.4.2"
 authors = ["Daniel Egger <daniel@eggers-club.de>"]
 repository = "https://github.com/therealprof/display-interface"
 documentation = "https://docs.rs/display-interface"
@@ -17,7 +17,10 @@ all-features = true
 
 [workspace]
 
-members = [".", "i2c", "parallel-gpio", "spi"]
+members = [".", "i2c", "parallel-gpio", "spi", "spi_async"]
 
 [patch.crates-io]
 display-interface = { version = "0.4", path = "." }
+
+[features]
+async = []
