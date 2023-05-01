@@ -1,6 +1,6 @@
 #![no_std]
 #![cfg_attr(
-    feature = "async",
+    all(feature = "async", feature = "nightly"),
     allow(incomplete_features),
     feature(async_fn_in_trait, impl_trait_projections)
 )]
@@ -11,6 +11,9 @@
 //! be consumed by display drivers. It abstracts over the different communication methods available
 //! to drive a display and allows a driver writer to focus on driving the display itself and only
 //! have to implement a single interface.
+
+#[cfg(all(feature = "async", not(feature = "nightly")))]
+extern crate alloc;
 
 pub mod prelude;
 
@@ -42,7 +45,7 @@ pub enum DisplayError {
 pub enum DataFormat<'a> {
     /// Slice of unsigned bytes
     U8(&'a [u8]),
-    /// Slice of unsigned 16bit values with the same endianess as the system, not recommended
+    /// Slice of unsigned 16bit values with the same endianness as the system, not recommended
     U16(&'a [u16]),
     /// Slice of unsigned 16bit values to be sent in big endian byte order
     U16BE(&'a mut [u16]),
@@ -67,8 +70,14 @@ pub trait WriteOnlyDataCommand {
     fn send_data(&mut self, buf: DataFormat<'_>) -> Result<(), DisplayError>;
 }
 
-#[cfg(feature = "async")]
+#[cfg(all(feature = "async", not(feature = "nightly")))]
+use alloc::boxed::Box;
 
+/// This trait implements a write-only interface for a display which has separate data and command
+/// modes. It is the responsibility of implementations to activate the correct mode in their
+/// implementation when corresponding method is called.
+#[cfg(feature = "async")]
+#[cfg_attr(not(feature = "nightly"), async_trait::async_trait(?Send))]
 pub trait AsyncWriteOnlyDataCommand {
     /// Send a batch of commands to display
     async fn send_commands(&mut self, cmd: DataFormat<'_>) -> Result<(), DisplayError>;

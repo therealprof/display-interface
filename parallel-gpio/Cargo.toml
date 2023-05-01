@@ -1,7 +1,7 @@
 [package]
 name = "display-interface-parallel-gpio"
 description = "Generic parallel GPIO interface for display interfaces"
-version = "0.6.0"
+version = "0.7.0-alpha.1"
 authors = ["Daniel Egger <daniel@eggers-club.de>"]
 repository = "https://github.com/therealprof/display-interface"
 documentation = "https://docs.rs/display-interface-parallel-gpio"
@@ -18,5 +18,5 @@ edition = "2018"
 all-features = true
 
 [dependencies]
-embedded-hal = "0.2.3"
-display-interface = "0.4"
+embedded-hal = "1.0.0-alpha.11"
+display-interface = { version = "0.5.0-alpha.1", path = ".." }
