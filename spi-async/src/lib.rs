@@ -2,9 +2,7 @@
 #![allow(incomplete_features)]
 #![feature(async_fn_in_trait)]
 #![feature(async_closure)]
-//! Generic SPI interface for display drivers
-
-//use embedded_hal::spi::blocking::SpiDevice;
+//! Generic asynchronous SPI interface for display drivers
 
 use embedded_hal::digital::OutputPin;
 use embedded_hal_async::spi::SpiBusWrite;

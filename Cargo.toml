@@ -24,7 +24,7 @@ members = [
     "i2c",
     "parallel-gpio",
     "spi",
-    "spi_async",
+    "spi-async",
 ]
 
 [patch.crates-io]
