@@ -14,7 +14,7 @@ pub struct I2CInterface<I2C> {
 
 impl<I2C> I2CInterface<I2C>
 where
-    I2C: hal::blocking::i2c::Write,
+    I2C: hal::i2c::I2c,
 {
     /// Create new I2C interface for communication with a display driver
     pub fn new(i2c: I2C, addr: u8, data_byte: u8) -> Self {
@@ -34,7 +34,7 @@ where
 
 impl<I2C> WriteOnlyDataCommand for I2CInterface<I2C>
 where
-    I2C: hal::blocking::i2c::Write,
+    I2C: hal::i2c::I2c,
 {
     fn send_commands(&mut self, cmds: DataFormat<'_>) -> Result<(), DisplayError> {
         // Copy over given commands to new aray to prefix with command identifier
