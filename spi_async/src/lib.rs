@@ -6,18 +6,16 @@
 
 //use embedded_hal::spi::blocking::SpiDevice;
 
-use embedded_hal::digital::v2::OutputPin;
+use embedded_hal::digital::OutputPin;
 use embedded_hal_async::spi::SpiBusWrite;
 
 use display_interface::{AsyncWriteOnlyDataCommand, DataFormat, DisplayError};
-
-use core::future::Future;
 
 type Result = core::result::Result<(), DisplayError>;
 
 async fn send_u8<SPI>(spi: &mut SPI, words: DataFormat<'_>) -> Result
 where
-    SPI: SpiBusWrite<u8>,
+    SPI: SpiBusWrite,
 {
     match words {
         DataFormat::U8(slice) => spi
@@ -137,7 +135,7 @@ pub struct SPIInterface<SPI, DC, CS> {
 
 impl<SPI, DC, CS> SPIInterface<SPI, DC, CS>
 where
-    SPI: SpiBusWrite<u8>,
+    SPI: SpiBusWrite,
     DC: OutputPin,
     CS: OutputPin,
 {
@@ -169,7 +167,7 @@ where
 
 impl<SPI, DC, CS> AsyncWriteOnlyDataCommand for SPIInterface<SPI, DC, CS>
 where
-    SPI: SpiBusWrite<u8>,
+    SPI: SpiBusWrite,
     DC: OutputPin,
     CS: OutputPin,
 {
@@ -198,7 +196,7 @@ pub struct SPIInterfaceNoCS<SPI, DC> {
 
 impl<SPI, DC> SPIInterfaceNoCS<SPI, DC>
 where
-    SPI: SpiBusWrite<u8>,
+    SPI: SpiBusWrite,
     DC: OutputPin,
 {
     /// Create new SPI interface for communciation with a display driver
@@ -215,7 +213,7 @@ where
 
 impl<SPI, DC> AsyncWriteOnlyDataCommand for SPIInterfaceNoCS<SPI, DC>
 where
-    SPI: SpiBusWrite<u8>,
+    SPI: SpiBusWrite,
     DC: OutputPin,
 {
     async fn send_commands(&mut self, cmds: DataFormat<'_>) -> Result {

@@ -9,7 +9,9 @@ categories = ["no-std"]
 keywords = ["graphics", "display", "embedded"]
 readme = "README.md"
 license = "MIT OR Apache-2.0"
-exclude = [".gitignore"]
+exclude = [
+	".gitignore",
+]
 edition = "2018"
 
 [package.metadata.docs.rs]
@@ -17,7 +19,13 @@ all-features = true
 
 [workspace]
 
-members = [".", "i2c", "parallel-gpio", "spi", "spi_async"]
+members = [
+    ".",
+    "i2c",
+    "parallel-gpio",
+    "spi",
+    "spi_async",
+]
 
 [patch.crates-io]
 display-interface = { version = "0.4", path = "." }
