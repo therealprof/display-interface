@@ -200,7 +200,7 @@ where
     SPI: SpiBusWrite,
     DC: OutputPin,
 {
-    /// Create new SPI interface for communciation with a display driver
+    /// Create new SPI interface for communication with a display driver
     pub fn new(spi: SPI, dc: DC) -> Self {
         Self { spi, dc }
     }

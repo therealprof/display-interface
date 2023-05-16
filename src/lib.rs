@@ -42,7 +42,7 @@ pub enum DisplayError {
 pub enum DataFormat<'a> {
     /// Slice of unsigned bytes
     U8(&'a [u8]),
-    /// Slice of unsigned 16bit values with the same endianess as the system, not recommended
+    /// Slice of unsigned 16bit values with the same endianness as the system, not recommended
     U16(&'a [u16]),
     /// Slice of unsigned 16bit values to be sent in big endian byte order
     U16BE(&'a mut [u16]),
