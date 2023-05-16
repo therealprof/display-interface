@@ -1,6 +1,14 @@
 #![no_std]
+#![cfg_attr(
+    feature = "async",
+    allow(incomplete_features),
+    feature(async_fn_in_trait, impl_trait_projections)
+)]
 
 //! Generic SPI interface for display drivers
+
+#[cfg(feature = "async")]
+pub mod asynch;
 
 use embedded_hal::{digital::OutputPin, spi::SpiBusWrite};
 
@@ -117,6 +125,21 @@ pub struct SPIInterface<SPI, DC, CS> {
 
 impl<SPI, DC, CS> SPIInterface<SPI, DC, CS>
 where
+    CS: OutputPin,
+{
+    pub(crate) fn cs_low(&mut self) -> Result {
+        self.cs.set_low().map_err(|_| DisplayError::CSError)?;
+        Ok(())
+    }
+
+    pub(crate) fn cs_high(&mut self) -> Result {
+        self.cs.set_high().map_err(|_| DisplayError::CSError)?;
+        Ok(())
+    }
+}
+
+impl<SPI, DC, CS> SPIInterface<SPI, DC, CS>
+where
     SPI: SpiBusWrite,
     DC: OutputPin,
     CS: OutputPin,
@@ -138,12 +161,12 @@ where
 
     fn with_cs(&mut self, f: impl FnOnce(&mut SPIInterfaceNoCS<SPI, DC>) -> Result) -> Result {
         // Assert chip select pin
-        self.cs.set_low().map_err(|_| DisplayError::CSError)?;
+        self.cs_low().map_err(|_| DisplayError::CSError)?;
 
         let result = f(&mut self.spi_no_cs);
 
         // Deassert chip select pin
-        self.cs.set_high().ok();
+        self.cs_high().ok();
 
         result
     }

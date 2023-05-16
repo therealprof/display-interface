@@ -10,7 +10,7 @@ keywords = ["graphics", "display", "embedded"]
 readme = "README.md"
 license = "MIT OR Apache-2.0"
 exclude = [
-	".gitignore",
+    ".gitignore",
 ]
 edition = "2018"
 
@@ -24,7 +24,6 @@ members = [
     "i2c",
     "parallel-gpio",
     "spi",
-    "spi-async",
 ]
 
 [patch.crates-io]

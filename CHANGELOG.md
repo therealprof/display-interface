@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Added
 
+- New `AsyncWriteOnlyDataCommand` trait. Available after enabling the `async` feature.
+- spi: `async/await` support via the `async` feature.
 - parallel-gpio: Added `Generic16BitBus`
 - parallel-gpio: Added `PGPIO16BitInterface`
 

@@ -1,13 +1,11 @@
-#![no_std]
-#![allow(incomplete_features)]
-#![feature(async_fn_in_trait)]
-#![feature(async_closure)]
 //! Generic asynchronous SPI interface for display drivers
 
 use embedded_hal::digital::OutputPin;
 use embedded_hal_async::spi::SpiBusWrite;
 
 use display_interface::{AsyncWriteOnlyDataCommand, DataFormat, DisplayError};
+
+use crate::{SPIInterface, SPIInterfaceNoCS};
 
 type Result = core::result::Result<(), DisplayError>;
 
@@ -123,46 +121,6 @@ where
     }
 }
 
-/// SPI display interface.
-///
-/// This combines the SPI peripheral and a data/command as well as a chip-select pin
-pub struct SPIInterface<SPI, DC, CS> {
-    spi_no_cs: SPIInterfaceNoCS<SPI, DC>,
-    cs: CS,
-}
-
-impl<SPI, DC, CS> SPIInterface<SPI, DC, CS>
-where
-    SPI: SpiBusWrite,
-    DC: OutputPin,
-    CS: OutputPin,
-{
-    /// Create new SPI interface for communication with a display driver
-    pub fn new(spi: SPI, dc: DC, cs: CS) -> Self {
-        Self {
-            spi_no_cs: SPIInterfaceNoCS::new(spi, dc),
-            cs,
-        }
-    }
-
-    /// Consume the display interface and return
-    /// the underlying peripherial driver and GPIO pins used by it
-    pub fn release(self) -> (SPI, DC, CS) {
-        let (spi, dc) = self.spi_no_cs.release();
-        (spi, dc, self.cs)
-    }
-
-    fn cs_low(&mut self) -> Result {
-        self.cs.set_low().map_err(|_| DisplayError::CSError)?;
-        Ok(())
-    }
-
-    fn cs_high(&mut self) -> Result {
-        self.cs.set_high().map_err(|_| DisplayError::CSError)?;
-        Ok(())
-    }
-}
-
 impl<SPI, DC, CS> AsyncWriteOnlyDataCommand for SPIInterface<SPI, DC, CS>
 where
     SPI: SpiBusWrite,
@@ -171,41 +129,16 @@ where
 {
     async fn send_commands(&mut self, cmds: DataFormat<'_>) -> Result {
         self.cs_low()?;
-        self.spi_no_cs.send_commands(cmds).await?;
-        self.cs_high()?;
-        Ok(())
+        let result = self.spi_no_cs.send_commands(cmds).await;
+        self.cs_high().ok();
+        result
     }
 
     async fn send_data(&mut self, buf: DataFormat<'_>) -> Result {
         self.cs_low()?;
-        self.spi_no_cs.send_data(buf).await?;
-        self.cs_high()?;
-        Ok(())
-    }
-}
-
-/// SPI display interface.
-///
-/// This combines the SPI peripheral and a data/command pin
-pub struct SPIInterfaceNoCS<SPI, DC> {
-    spi: SPI,
-    dc: DC,
-}
-
-impl<SPI, DC> SPIInterfaceNoCS<SPI, DC>
-where
-    SPI: SpiBusWrite,
-    DC: OutputPin,
-{
-    /// Create new SPI interface for communciation with a display driver
-    pub fn new(spi: SPI, dc: DC) -> Self {
-        Self { spi, dc }
-    }
-
-    /// Consume the display interface and return
-    /// the underlying peripherial driver and GPIO pins used by it
-    pub fn release(self) -> (SPI, DC) {
-        (self.spi, self.dc)
+        let result = self.spi_no_cs.send_data(buf).await;
+        self.cs_high().ok();
+        result
     }
 }
 

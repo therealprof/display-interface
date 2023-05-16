@@ -4,6 +4,13 @@ This Rust crate contains a generic SPI implementation of a data/command
 interface for displays over any SPI driver implementing the `embedded-hal`
 `spi::SpiBusWrite<u8>` trait.
 
+## Crate features
+
+Additional features can be enabled by adding the following features to your Cargo.toml.
+
+ - `async`: enables the asynchronous interface in the `asynch` module. Currently, this requires
+   a nightly Rust compiler released on or after 2022-11-17.
+
 ## License
 
 Licensed under either of

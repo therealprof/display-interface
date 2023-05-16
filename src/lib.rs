@@ -67,8 +67,10 @@ pub trait WriteOnlyDataCommand {
     fn send_data(&mut self, buf: DataFormat<'_>) -> Result<(), DisplayError>;
 }
 
+/// This trait implements a write-only interface for a display which has separate data and command
+/// modes. It is the responsibility of implementations to activate the correct mode in their
+/// implementation when corresponding method is called.
 #[cfg(feature = "async")]
-
 pub trait AsyncWriteOnlyDataCommand {
     /// Send a batch of commands to display
     async fn send_commands(&mut self, cmd: DataFormat<'_>) -> Result<(), DisplayError>;
