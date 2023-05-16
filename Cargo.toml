@@ -26,9 +26,6 @@ members = [
     "spi",
 ]
 
-[patch.crates-io]
-display-interface = { version = "0.4", path = "." }
-
 [features]
 default = []
 async = []

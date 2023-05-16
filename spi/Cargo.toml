@@ -20,7 +20,7 @@ all-features = true
 [dependencies]
 embedded-hal = "1.0.0-alpha.10"
 embedded-hal-async = { version = "0.2.0-alpha.1", optional = true }
-display-interface = "0.4.1"
+display-interface = { version = "0.4.1", path = ".." }
 byte-slice-cast = { version = "1.2.2", default-features = false }
 
 [features]
