@@ -77,14 +77,14 @@ where
                 i += 1;
 
                 if i == buf.len() {
-                    spi.write(&buf.as_byte_slice())
+                    spi.write(buf.as_byte_slice())
                         .map_err(|_| DisplayError::BusWriteError)?;
                     i = 0;
                 }
             }
 
             if i > 0 {
-                spi.write(&buf[..i].as_byte_slice())
+                spi.write(buf[..i].as_byte_slice())
                     .map_err(|_| DisplayError::BusWriteError)?;
             }
 
@@ -101,14 +101,14 @@ where
                 i += 1;
 
                 if i == len {
-                    spi.write(&buf.as_byte_slice())
+                    spi.write(buf.as_byte_slice())
                         .map_err(|_| DisplayError::BusWriteError)?;
                     i = 0;
                 }
             }
 
             if i > 0 {
-                spi.write(&buf[..i].as_byte_slice())
+                spi.write(buf[..i].as_byte_slice())
                     .map_err(|_| DisplayError::BusWriteError)?;
             }
 
