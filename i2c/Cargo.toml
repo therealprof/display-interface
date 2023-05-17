@@ -18,10 +18,12 @@ edition = "2018"
 all-features = true
 
 [dependencies]
+async-trait = { version = "0.1.68", optional = true }
 embedded-hal = "1.0.0-alpha.10"
 embedded-hal-async = { version = "0.2.0-alpha.1", optional = true }
 display-interface = { version = "0.4.1", path = ".." }
 
 [features]
 default = []
-async = ["embedded-hal-async", "display-interface/async"]
+async = ["async-trait", "embedded-hal-async", "display-interface/async"]
+nightly = ["display-interface/nightly"]

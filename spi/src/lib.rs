@@ -1,11 +1,14 @@
 #![no_std]
 #![cfg_attr(
-    feature = "async",
+    all(feature = "async", feature = "nightly"),
     allow(incomplete_features),
     feature(async_fn_in_trait, impl_trait_projections)
 )]
 
 //! Generic SPI interface for display drivers
+
+#[cfg(all(feature = "async", not(feature = "nightly")))]
+extern crate alloc;
 
 #[cfg(feature = "async")]
 pub mod asynch;

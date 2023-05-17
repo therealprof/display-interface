@@ -8,8 +8,12 @@ interface for displays over any SPI driver implementing the `embedded-hal`
 
 Additional features can be enabled by adding the following features to your Cargo.toml.
 
- - `async`: enables the asynchronous interface in the `asynch` module. Currently, this requires
-   a nightly Rust compiler released on or after 2022-11-17.
+ - `async`: enables `AsyncWriteOnlyDataCommand`. This feature uses `#[async_trait]` and can be
+   used with rustc 1.56 and newer. Using this feature requires allocator support.
+ - `nightly`: Enables support for nightly-only, unstable features. Together with `async`, this will
+   enable the `async_fn_in_trait` and `impl_trait_projections` unstable features,
+   and removes the `#[async_trait]` workaround as well as the allocator requirement.
+   This feature requires a nightly Rust compiler released on or after 2022-11-17.
 
 ## License
 

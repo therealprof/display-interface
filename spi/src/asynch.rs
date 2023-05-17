@@ -121,6 +121,10 @@ where
     }
 }
 
+#[cfg(not(feature = "nightly"))]
+use alloc::boxed::Box;
+
+#[cfg_attr(not(feature = "nightly"), async_trait::async_trait(?Send))]
 impl<SPI, DC, CS> AsyncWriteOnlyDataCommand for SPIInterface<SPI, DC, CS>
 where
     SPI: SpiBusWrite,
@@ -142,6 +146,7 @@ where
     }
 }
 
+#[cfg_attr(not(feature = "nightly"), async_trait::async_trait(?Send))]
 impl<SPI, DC> AsyncWriteOnlyDataCommand for SPIInterfaceNoCS<SPI, DC>
 where
     SPI: SpiBusWrite,

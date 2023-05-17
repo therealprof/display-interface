@@ -17,8 +17,10 @@ edition = "2018"
 [package.metadata.docs.rs]
 all-features = true
 
-[workspace]
+[dependencies]
+async-trait = { version = "0.1.68", optional = true }
 
+[workspace]
 members = [
     ".",
     "i2c",
@@ -28,4 +30,5 @@ members = [
 
 [features]
 default = []
-async = []
+async = ["async-trait"]
+nightly = []
