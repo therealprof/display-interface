@@ -120,11 +120,7 @@ pub struct SPIInterface<SPI, DC> {
     dc: DC,
 }
 
-impl<SPI, DC> SPIInterface<SPI, DC>
-where
-    SPI: SpiDeviceWrite,
-    DC: OutputPin,
-{
+impl<SPI, DC> SPIInterface<SPI, DC> {
     /// Create new SPI interface for communication with a display driver
     pub fn new(spi: SPI, dc: DC) -> Self {
         Self { spi, dc }
