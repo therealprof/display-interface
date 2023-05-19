@@ -2,7 +2,7 @@
 
 This Rust crate contains a generic SPI implementation of a data/command
 interface for displays over any SPI driver implementing the `embedded-hal`
-`spi::SpiBusWrite<u8>` trait.
+`spi::SpiDeviceWrite<u8>` trait.
 
 ## Crate features
 

@@ -1,31 +1,29 @@
 //! Generic asynchronous SPI interface for display drivers
 
+use byte_slice_cast::*;
 use embedded_hal::digital::OutputPin;
-use embedded_hal_async::spi::SpiBusWrite;
+use embedded_hal_async::spi::SpiDeviceWrite;
 
 use display_interface::{AsyncWriteOnlyDataCommand, DataFormat, DisplayError};
 
-use crate::{SPIInterface, SPIInterfaceNoCS};
+use crate::SPIInterface;
 
 type Result = core::result::Result<(), DisplayError>;
 
 async fn send_u8<SPI>(spi: &mut SPI, words: DataFormat<'_>) -> Result
 where
-    SPI: SpiBusWrite,
+    SPI: SpiDeviceWrite,
 {
     match words {
         DataFormat::U8(slice) => spi
             .write(slice)
             .await
             .map_err(|_| DisplayError::BusWriteError),
-        DataFormat::U16(slice) => {
-            use byte_slice_cast::*;
-            spi.write(slice.as_byte_slice())
-                .await
-                .map_err(|_| DisplayError::BusWriteError)
-        }
+        DataFormat::U16(slice) => spi
+            .write(slice.as_byte_slice())
+            .await
+            .map_err(|_| DisplayError::BusWriteError),
         DataFormat::U16LE(slice) => {
-            use byte_slice_cast::*;
             for v in slice.as_mut() {
                 *v = v.to_le();
             }
@@ -34,7 +32,6 @@ where
                 .map_err(|_| DisplayError::BusWriteError)
         }
         DataFormat::U16BE(slice) => {
-            use byte_slice_cast::*;
             for v in slice.as_mut() {
                 *v = v.to_be();
             }
@@ -67,7 +64,6 @@ where
             Ok(())
         }
         DataFormat::U16LEIter(iter) => {
-            use byte_slice_cast::*;
             let mut buf = [0; 32];
             let mut i = 0;
 
@@ -92,7 +88,6 @@ where
             Ok(())
         }
         DataFormat::U16BEIter(iter) => {
-            use byte_slice_cast::*;
             let mut buf = [0; 64];
             let mut i = 0;
             let len = buf.len();
@@ -125,31 +120,9 @@ where
 use alloc::boxed::Box;
 
 #[cfg_attr(not(feature = "nightly"), async_trait::async_trait(?Send))]
-impl<SPI, DC, CS> AsyncWriteOnlyDataCommand for SPIInterface<SPI, DC, CS>
+impl<SPI, DC> AsyncWriteOnlyDataCommand for SPIInterface<SPI, DC>
 where
-    SPI: SpiBusWrite,
-    DC: OutputPin,
-    CS: OutputPin,
-{
-    async fn send_commands(&mut self, cmds: DataFormat<'_>) -> Result {
-        self.cs_low()?;
-        let result = self.spi_no_cs.send_commands(cmds).await;
-        self.cs_high().ok();
-        result
-    }
-
-    async fn send_data(&mut self, buf: DataFormat<'_>) -> Result {
-        self.cs_low()?;
-        let result = self.spi_no_cs.send_data(buf).await;
-        self.cs_high().ok();
-        result
-    }
-}
-
-#[cfg_attr(not(feature = "nightly"), async_trait::async_trait(?Send))]
-impl<SPI, DC> AsyncWriteOnlyDataCommand for SPIInterfaceNoCS<SPI, DC>
-where
-    SPI: SpiBusWrite,
+    SPI: SpiDeviceWrite,
     DC: OutputPin,
 {
     async fn send_commands(&mut self, cmds: DataFormat<'_>) -> Result {

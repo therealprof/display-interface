@@ -14,6 +14,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - parallel-gpio: Added `Generic16BitBus`
 - parallel-gpio: Added `PGPIO16BitInterface`
 
+## Changed
+
+- spi: `SPIInterface` now wraps objects that implement the `SpiDeviceWrite` trait from embedded-hal 1.0.0-alpha.10.
+- spi: `SPIInterface` now wraps objects that implement the `SpiDeviceWrite` trait from embedded-hal-async 0.2.0-alpha.1.
+
 ## [v0.4.1] - 2021-05-10
 
 ### Added
