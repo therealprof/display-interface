@@ -1,7 +1,7 @@
 [package]
 name = "display-interface"
 description = "Traits for interfaces used to drive displays"
-version = "0.4.1"
+version = "0.5.0-alpha.1"
 authors = ["Daniel Egger <daniel@eggers-club.de>"]
 repository = "https://github.com/therealprof/display-interface"
 documentation = "https://docs.rs/display-interface"
@@ -10,15 +10,17 @@ keywords = ["graphics", "display", "embedded"]
 readme = "README.md"
 license = "MIT OR Apache-2.0"
 exclude = [
-	".gitignore",
+    ".gitignore",
 ]
 edition = "2018"
 
 [package.metadata.docs.rs]
 all-features = true
 
-[workspace]
+[dependencies]
+async-trait = { version = "0.1.68", optional = true }
 
+[workspace]
 members = [
     ".",
     "i2c",
@@ -26,6 +28,7 @@ members = [
     "spi",
 ]
 
-[patch.crates-io]
-display-interface = { version = "0.4", path = "." }
-
+[features]
+default = []
+async = ["async-trait"]
+nightly = []
