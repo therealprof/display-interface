@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Added
 
+- Updated to embedded-hal 1.0.0-rc.1 and embedded-hal-async 1.0.0-rc.1
 - New `AsyncWriteOnlyDataCommand` trait. Available after enabling the `async` feature.
 - i2c, spi: `async/await` support via the `async` feature.
 - parallel-gpio: Added `Generic16BitBus`
