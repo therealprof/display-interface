@@ -9,9 +9,7 @@ categories = ["no-std"]
 keywords = ["graphics", "display", "embedded"]
 readme = "README.md"
 license = "MIT OR Apache-2.0"
-exclude = [
-	".gitignore",
-]
+exclude = [".gitignore"]
 edition = "2018"
 
 [package.metadata.docs.rs]
@@ -19,8 +17,8 @@ all-features = true
 
 [dependencies]
 async-trait = { version = "0.1.68", optional = true }
-embedded-hal = "1.0.0-alpha.11"
-embedded-hal-async = { version = "0.2.0-alpha.2", optional = true }
+embedded-hal = "1.0.0-rc.1"
+embedded-hal-async = { version = "1.0.0-rc.1", optional = true }
 display-interface = { version = "0.5.0-alpha.1", path = ".." }
 
 [features]
