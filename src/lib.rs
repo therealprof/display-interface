@@ -1,7 +1,7 @@
 #![no_std]
 #![cfg_attr(
     all(feature = "async", feature = "nightly"),
-    allow(incomplete_features),
+    allow(incomplete_features, unknown_lints, stable_features, async_fn_in_trait),
     feature(async_fn_in_trait, impl_trait_projections)
 )]
 
