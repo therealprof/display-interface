@@ -15,11 +15,15 @@
 #[cfg(all(feature = "async", not(feature = "nightly")))]
 extern crate alloc;
 
+#[cfg(feature = "defmt")]
+use defmt::Format;
+
 pub mod prelude;
 
 /// A ubiquitous error type for all kinds of problems which could happen when communicating with a
 /// display
 #[derive(Clone, Debug)]
+#[cfg_attr(feature = "defmt", derive(Format))]
 #[non_exhaustive]
 pub enum DisplayError {
     /// Invalid data format selected for interface selected
