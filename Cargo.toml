@@ -19,6 +19,7 @@ all-features = true
 
 [dependencies]
 async-trait = { version = "0.1.68", optional = true }
+defmt = { version = "0.3", optional = true }
 
 [workspace]
 members = [
@@ -31,4 +32,5 @@ members = [
 [features]
 default = []
 async = ["async-trait"]
+defmt = ["dep:defmt"]
 nightly = []
