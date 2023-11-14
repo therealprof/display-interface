@@ -19,6 +19,8 @@ use embedded_hal::{digital::OutputPin, spi::SpiDevice};
 
 type Result = core::result::Result<(), DisplayError>;
 
+pub(crate) const BUFFER_SIZE: usize = 64;
+
 fn send_u8<SPI>(spi: &mut SPI, words: DataFormat<'_>) -> Result
 where
     SPI: SpiDevice,
@@ -43,7 +45,7 @@ where
                 .map_err(|_| DisplayError::BusWriteError)
         }
         DataFormat::U8Iter(iter) => {
-            let mut buf = [0; 32];
+            let mut buf = [0; BUFFER_SIZE];
             let mut i = 0;
 
             for v in iter.into_iter() {
@@ -64,7 +66,7 @@ where
             Ok(())
         }
         DataFormat::U16LEIter(iter) => {
-            let mut buf = [0; 32];
+            let mut buf = [0; BUFFER_SIZE];
             let mut i = 0;
 
             for v in iter.map(u16::to_le) {
@@ -86,7 +88,7 @@ where
             Ok(())
         }
         DataFormat::U16BEIter(iter) => {
-            let mut buf = [0; 64];
+            let mut buf = [0; BUFFER_SIZE];
             let mut i = 0;
             let len = buf.len();
 
