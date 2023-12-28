@@ -1,19 +1,8 @@
 # SPI interface for display interface
 
 This Rust crate contains a generic SPI implementation of a data/command
-interface for displays over any SPI driver implementing the `embedded-hal`
-`spi::SpiDeviceWrite<u8>` trait.
-
-## Crate features
-
-Additional features can be enabled by adding the following features to your Cargo.toml.
-
- - `async`: enables `AsyncWriteOnlyDataCommand`. This feature uses `#[async_trait]` and can be
-   used with rustc 1.56 and newer. Using this feature requires allocator support.
- - `nightly`: Enables support for nightly-only, unstable features. Together with `async`, this will
-   enable the `async_fn_in_trait` and `impl_trait_projections` unstable features,
-   and removes the `#[async_trait]` workaround as well as the allocator requirement.
-   This feature requires a nightly Rust compiler released on or after 2022-11-17.
+interface for displays over any SPI driver implementing the `embedded-hal`/`embedded-hal-async`
+`SpiDevice` trait(s).
 
 ## License
 

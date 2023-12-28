@@ -1,17 +1,8 @@
-#![no_std]
-#![cfg_attr(
-    all(feature = "async", feature = "nightly"),
-    allow(incomplete_features, unknown_lints, stable_features, async_fn_in_trait),
-    feature(async_fn_in_trait, impl_trait_projections)
-)]
-
 //! Generic SPI interface for display drivers
 
-#[cfg(all(feature = "async", not(feature = "nightly")))]
-extern crate alloc;
+#![no_std]
 
-#[cfg(feature = "async")]
-pub mod asynch;
+mod asynch;
 
 use byte_slice_cast::*;
 use display_interface::{DataFormat, DisplayError, WriteOnlyDataCommand};

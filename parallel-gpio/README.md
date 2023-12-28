@@ -2,7 +2,7 @@
 
 This Rust crate contains a generic parallel implementation of a data/command
 interface for displays over any GPIO driver implementing the `embedded-hal`
-`digital::v2::OutputPin` trait.
+`digital::OutputPin` trait.
 
 ## License
 

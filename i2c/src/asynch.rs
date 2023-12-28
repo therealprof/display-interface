@@ -2,10 +2,6 @@ use display_interface::{AsyncWriteOnlyDataCommand, DataFormat, DisplayError};
 
 use crate::I2CInterface;
 
-#[cfg(not(feature = "nightly"))]
-use alloc::boxed::Box;
-
-#[cfg_attr(not(feature = "nightly"), async_trait::async_trait(?Send))]
 impl<I2C> AsyncWriteOnlyDataCommand for I2CInterface<I2C>
 where
     I2C: embedded_hal_async::i2c::I2c,

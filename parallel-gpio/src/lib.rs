@@ -1,6 +1,5 @@
-#![no_std]
-
 //! Generic parallel GPIO interface for display drivers
+#![no_std]
 
 use embedded_hal::digital::OutputPin;
 

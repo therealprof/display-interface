@@ -1,7 +1,7 @@
 [package]
 name = "display-interface-i2c"
 description = "Generic I2C implementation for display interfaces"
-version = "0.5.0-alpha.1"
+version = "0.5.0"
 authors = ["Daniel Egger <daniel@eggers-club.de>"]
 repository = "https://github.com/therealprof/display-interface"
 documentation = "https://docs.rs/display-interface-i2c"
@@ -10,18 +10,13 @@ keywords = ["graphics", "display", "embedded"]
 readme = "README.md"
 license = "MIT OR Apache-2.0"
 exclude = [".gitignore"]
-edition = "2018"
+edition = "2021"
+rust-version = "1.75"
 
 [package.metadata.docs.rs]
 all-features = true
 
 [dependencies]
-async-trait = { version = "0.1.68", optional = true }
-embedded-hal = "1.0.0-rc.1"
-embedded-hal-async = { version = "1.0.0-rc.1", optional = true }
-display-interface = { version = "0.5.0-alpha.1", path = ".." }
-
-[features]
-default = []
-async = ["async-trait", "embedded-hal-async", "display-interface/async"]
-nightly = ["display-interface/nightly"]
+embedded-hal = "1.0.0"
+embedded-hal-async = "1.0.0"
+display-interface = { version = "0.5.0", path = ".." }

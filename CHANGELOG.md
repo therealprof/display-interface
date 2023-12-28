@@ -9,16 +9,18 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Added
 
-- Updated to embedded-hal 1.0.0-rc.1 and embedded-hal-async 1.0.0-rc.1
-- New `AsyncWriteOnlyDataCommand` trait. Available after enabling the `async` feature.
-- i2c, spi: `async/await` support via the `async` feature.
+- Updated to embedded-hal 1.0.0 and embedded-hal-async 1.0.0
+- New `AsyncWriteOnlyDataCommand` trait.
+- i2c, spi: `async/await` support.
 - parallel-gpio: Added `Generic16BitBus`
 - parallel-gpio: Added `PGPIO16BitInterface`
+- added `defmt-03` feature
 
 ## Changed
 
-- spi: `SPIInterface` now wraps objects that implement the `SpiDeviceWrite` trait from embedded-hal 1.0.0-alpha.10.
-- spi: `SPIInterface` now wraps objects that implement the `SpiDeviceWrite` trait from embedded-hal-async 0.2.0-alpha.1.
+- **Breaking** raised MSRV to 1.75
+- spi: `SPIInterface` now wraps objects that implement the `SpiDeviceWrite` trait from embedded-hal 1.0.0
+- spi: `SPIInterface` now wraps objects that implement the `SpiDeviceWrite` trait from embedded-hal-async 1.0.0
 - parallel-gpio: Fixed bug with fallible pins
 - **Breaking** parallel-gpio: `GenericxBitBus::new` is now infallible
 
