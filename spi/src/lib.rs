@@ -129,7 +129,7 @@ impl<SPI, DC> SPIInterface<SPI, DC> {
     }
 
     /// Consume the display interface and return
-    /// the underlying peripherial driver and GPIO pins used by it
+    /// the underlying peripheral driver and GPIO pins used by it
     pub fn release(self) -> (SPI, DC) {
         (self.spi, self.dc)
     }
