@@ -23,23 +23,18 @@ macro_rules! generic_bus {
         /// A generic implementation of [OutputBus] using [OutputPin]s
         pub struct $GenericxBitBus<$($PX, )*> {
             pins: ($($PX, )*),
-            last: $Word,
+            last: Option<$Word>,
         }
 
         impl<$($PX, )*> $GenericxBitBus<$($PX, )*>
         where
             $($PX: OutputPin, )*
         {
-            /// Creates a new instance and initializes the bus to `0`.
+            /// Creates a new bus. This does not change the state of the pins.
             ///
             /// The first pin in the tuple is the least significant bit.
-            pub fn new(pins: ($($PX, )*)) -> Result<Self> {
-                let mut bus = Self { pins, last: $Word::MAX };
-
-                // By setting `last` to all ones, we ensure that this will update all the pins
-                bus.set_value(0)?;
-
-                Ok(bus)
+            pub fn new(pins: ($($PX, )*)) -> Self {
+                Self { pins, last: None }
             }
 
             /// Consumes the bus and returns the pins. This does not change the state of the pins.
@@ -56,38 +51,44 @@ macro_rules! generic_bus {
             type Word = $Word;
 
             fn set_value(&mut self, value: Self::Word) -> Result {
-                let changed = value ^ self.last;
-
-                // It's quite common for multiple consecutive values to be identical, e.g. when filling or
-                // clearing the screen, so let's optimize for that case
-                if changed != 0 {
-                    $(
-                        let mask = 1 << $x;
-                        if changed & mask != 0 {
-                            if value & mask != 0 {
-                                self.pins.$x.set_high()
-                            } else {
-                                self.pins.$x.set_low()
-                            }
-                            .map_err(|_| DisplayError::BusWriteError)?;
-                        }
-                    )*
-
-                    self.last = value;
+                if self.last == Some(value) {
+                    // It's quite common for multiple consecutive values to be identical, e.g. when filling or
+                    // clearing the screen, so let's optimize for that case
+                    return Ok(())
                 }
 
+                // Sets self.last to None.
+                // We will update it to Some(value) *after* all the pins are succesfully set.
+                let last = self.last.take();
+
+                let changed = match last {
+                    Some(old_value) => value ^ old_value,
+                    None => !0, // all ones, this ensures that we will update all the pins
+                };
+
+                $(
+                    let mask = 1 << $x;
+                    if changed & mask != 0 {
+                        if value & mask != 0 {
+                            self.pins.$x.set_high()
+                        } else {
+                            self.pins.$x.set_low()
+                        }
+                        .map_err(|_| DisplayError::BusWriteError)?;
+                    }
+                )*
+
+                self.last = Some(value);
                 Ok(())
             }
         }
 
-        impl<$($PX, )*> core::convert::TryFrom<($($PX, )*)>
+        impl<$($PX, )*> From<($($PX, )*)>
             for $GenericxBitBus<$($PX, )*>
         where
             $($PX: OutputPin, )*
         {
-            type Error = DisplayError;
-
-            fn try_from(pins: ($($PX, )*)) -> Result<Self> {
+            fn from(pins: ($($PX, )*)) -> Self {
                 Self::new(pins)
             }
         }
