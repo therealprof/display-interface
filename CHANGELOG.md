@@ -19,6 +19,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 - spi: `SPIInterface` now wraps objects that implement the `SpiDeviceWrite` trait from embedded-hal 1.0.0-alpha.10.
 - spi: `SPIInterface` now wraps objects that implement the `SpiDeviceWrite` trait from embedded-hal-async 0.2.0-alpha.1.
+- parallel-gpio: Fixed bug with fallible pins
+- **Breaking** parallel-gpio: `GenericxBitBus::new` is now infallible
 
 ## [v0.4.1] - 2021-05-10
 
