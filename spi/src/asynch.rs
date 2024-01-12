@@ -6,7 +6,7 @@ use embedded_hal_async::spi::SpiDevice;
 
 use display_interface::{AsyncWriteOnlyDataCommand, DataFormat, DisplayError};
 
-use crate::SPIInterface;
+use crate::{SPIInterface, BUFFER_SIZE};
 
 type Result = core::result::Result<(), DisplayError>;
 
@@ -40,7 +40,7 @@ where
                 .map_err(|_| DisplayError::BusWriteError)
         }
         DataFormat::U8Iter(iter) => {
-            let mut buf = [0; 32];
+            let mut buf = [0; BUFFER_SIZE];
             let mut i = 0;
 
             for v in iter.into_iter() {
@@ -64,7 +64,7 @@ where
             Ok(())
         }
         DataFormat::U16LEIter(iter) => {
-            let mut buf = [0; 32];
+            let mut buf = [0; BUFFER_SIZE];
             let mut i = 0;
 
             for v in iter.map(u16::to_le) {
@@ -88,7 +88,7 @@ where
             Ok(())
         }
         DataFormat::U16BEIter(iter) => {
-            let mut buf = [0; 64];
+            let mut buf = [0; BUFFER_SIZE];
             let mut i = 0;
             let len = buf.len();
 
@@ -116,10 +116,6 @@ where
     }
 }
 
-#[cfg(not(feature = "nightly"))]
-use alloc::boxed::Box;
-
-#[cfg_attr(not(feature = "nightly"), async_trait::async_trait(?Send))]
 impl<SPI, DC> AsyncWriteOnlyDataCommand for SPIInterface<SPI, DC>
 where
     SPI: SpiDevice,

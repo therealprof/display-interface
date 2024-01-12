@@ -29,7 +29,3 @@ jobs:
         with:
           command: build
           args: --package display-interface-parallel-gpio
-      - uses: actions-rs/cargo@v1
-        with:
-          command: build
-          args: --workspace --features=async

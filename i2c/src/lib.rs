@@ -1,17 +1,8 @@
-#![no_std]
-#![cfg_attr(
-    all(feature = "async", feature = "nightly"),
-    allow(incomplete_features, unknown_lints, stable_features, async_fn_in_trait),
-    feature(async_fn_in_trait, impl_trait_projections)
-)]
-
 //! Generic I2C interface for display drivers
 
-#[cfg(all(feature = "async", not(feature = "nightly")))]
-extern crate alloc;
+#![no_std]
 
-#[cfg(feature = "async")]
-pub mod asynch;
+mod asynch;
 
 use display_interface::{DataFormat, DisplayError, WriteOnlyDataCommand};
 
@@ -22,10 +13,7 @@ pub struct I2CInterface<I2C> {
     data_byte: u8,
 }
 
-impl<I2C> I2CInterface<I2C>
-where
-    I2C: embedded_hal::i2c::I2c,
-{
+impl<I2C> I2CInterface<I2C> {
     /// Create new I2C interface for communication with a display driver
     pub fn new(i2c: I2C, addr: u8, data_byte: u8) -> Self {
         Self {
@@ -36,7 +24,7 @@ where
     }
 
     /// Consume the display interface and return
-    /// the underlying peripherial driver
+    /// the underlying peripheral driver
     pub fn release(self) -> I2C {
         self.i2c
     }

@@ -1,10 +1,3 @@
-#![no_std]
-#![cfg_attr(
-    all(feature = "async", feature = "nightly"),
-    allow(incomplete_features, unknown_lints, stable_features, async_fn_in_trait),
-    feature(async_fn_in_trait, impl_trait_projections)
-)]
-
 //! A generic display interface
 //!
 //! This crate contains an error type and traits to implement for bus interface drivers drivers to
@@ -12,18 +5,15 @@
 //! to drive a display and allows a driver writer to focus on driving the display itself and only
 //! have to implement a single interface.
 
-#[cfg(all(feature = "async", not(feature = "nightly")))]
-extern crate alloc;
-
-#[cfg(feature = "defmt")]
-use defmt::Format;
+#![no_std]
+#![allow(async_fn_in_trait)]
 
 pub mod prelude;
 
 /// A ubiquitous error type for all kinds of problems which could happen when communicating with a
 /// display
 #[derive(Clone, Debug)]
-#[cfg_attr(feature = "defmt", derive(Format))]
+#[cfg_attr(feature = "defmt-03", derive(defmt::Format))]
 #[non_exhaustive]
 pub enum DisplayError {
     /// Invalid data format selected for interface selected
@@ -74,14 +64,9 @@ pub trait WriteOnlyDataCommand {
     fn send_data(&mut self, buf: DataFormat<'_>) -> Result<(), DisplayError>;
 }
 
-#[cfg(all(feature = "async", not(feature = "nightly")))]
-use alloc::boxed::Box;
-
 /// This trait implements a write-only interface for a display which has separate data and command
 /// modes. It is the responsibility of implementations to activate the correct mode in their
 /// implementation when corresponding method is called.
-#[cfg(feature = "async")]
-#[cfg_attr(not(feature = "nightly"), async_trait::async_trait(?Send))]
 pub trait AsyncWriteOnlyDataCommand {
     /// Send a batch of commands to display
     async fn send_commands(&mut self, cmd: DataFormat<'_>) -> Result<(), DisplayError>;

@@ -1,23 +1,16 @@
-#![no_std]
-#![cfg_attr(
-    all(feature = "async", feature = "nightly"),
-    allow(incomplete_features, unknown_lints, stable_features, async_fn_in_trait),
-    feature(async_fn_in_trait, impl_trait_projections)
-)]
-
 //! Generic SPI interface for display drivers
 
-#[cfg(all(feature = "async", not(feature = "nightly")))]
-extern crate alloc;
+#![no_std]
 
-#[cfg(feature = "async")]
-pub mod asynch;
+mod asynch;
 
 use byte_slice_cast::*;
 use display_interface::{DataFormat, DisplayError, WriteOnlyDataCommand};
 use embedded_hal::{digital::OutputPin, spi::SpiDevice};
 
 type Result = core::result::Result<(), DisplayError>;
+
+pub(crate) const BUFFER_SIZE: usize = 64;
 
 fn send_u8<SPI>(spi: &mut SPI, words: DataFormat<'_>) -> Result
 where
@@ -43,7 +36,7 @@ where
                 .map_err(|_| DisplayError::BusWriteError)
         }
         DataFormat::U8Iter(iter) => {
-            let mut buf = [0; 32];
+            let mut buf = [0; BUFFER_SIZE];
             let mut i = 0;
 
             for v in iter.into_iter() {
@@ -64,7 +57,7 @@ where
             Ok(())
         }
         DataFormat::U16LEIter(iter) => {
-            let mut buf = [0; 32];
+            let mut buf = [0; BUFFER_SIZE];
             let mut i = 0;
 
             for v in iter.map(u16::to_le) {
@@ -86,7 +79,7 @@ where
             Ok(())
         }
         DataFormat::U16BEIter(iter) => {
-            let mut buf = [0; 64];
+            let mut buf = [0; BUFFER_SIZE];
             let mut i = 0;
             let len = buf.len();
 
@@ -127,7 +120,7 @@ impl<SPI, DC> SPIInterface<SPI, DC> {
     }
 
     /// Consume the display interface and return
-    /// the underlying peripherial driver and GPIO pins used by it
+    /// the underlying peripheral driver and GPIO pins used by it
     pub fn release(self) -> (SPI, DC) {
         (self.spi, self.dc)
     }
