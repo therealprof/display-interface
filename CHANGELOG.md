@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+
+## [v0.5.0] - 2023-01-12
+
 ## Added
 
 - Updated to embedded-hal 1.0.0 and embedded-hal-async 1.0.0
