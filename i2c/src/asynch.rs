@@ -1,8 +1,8 @@
 use display_interface::{AsyncWriteOnlyDataCommand, DataFormat, DisplayError};
 
-use crate::I2CInterface;
+use crate::I2cInterface;
 
-impl<I2C> AsyncWriteOnlyDataCommand for I2CInterface<I2C>
+impl<I2C> AsyncWriteOnlyDataCommand for I2cInterface<I2C>
 where
     I2C: embedded_hal_async::i2c::I2c,
 {

@@ -7,13 +7,13 @@ mod asynch;
 use display_interface::{DataFormat, DisplayError, WriteOnlyDataCommand};
 
 /// I2C communication interface
-pub struct I2CInterface<I2C> {
+pub struct I2cInterface<I2C> {
     i2c: I2C,
     addr: u8,
     data_byte: u8,
 }
 
-impl<I2C> I2CInterface<I2C> {
+impl<I2C> I2cInterface<I2C> {
     /// Create new I2C interface for communication with a display driver
     pub fn new(i2c: I2C, addr: u8, data_byte: u8) -> Self {
         Self {
@@ -30,7 +30,7 @@ impl<I2C> I2CInterface<I2C> {
     }
 }
 
-impl<I2C> WriteOnlyDataCommand for I2CInterface<I2C>
+impl<I2C> WriteOnlyDataCommand for I2cInterface<I2C>
 where
     I2C: embedded_hal::i2c::I2c,
 {

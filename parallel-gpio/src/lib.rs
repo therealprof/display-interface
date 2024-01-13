@@ -143,13 +143,13 @@ generic_bus! {
 /// All pins are supposed to be high-active, high for the D/C pin meaning "data" and the
 /// write-enable being pulled low before the setting of the bits and supposed to be sampled at a
 /// low to high edge.
-pub struct PGPIO8BitInterface<BUS, DC, WR> {
+pub struct PGpio8BitInterface<BUS, DC, WR> {
     bus: BUS,
     dc: DC,
     wr: WR,
 }
 
-impl<BUS, DC, WR> PGPIO8BitInterface<BUS, DC, WR>
+impl<BUS, DC, WR> PGpio8BitInterface<BUS, DC, WR>
 where
     BUS: OutputBus<Word = u8>,
     DC: OutputPin,
@@ -201,7 +201,7 @@ where
     }
 }
 
-impl<BUS, DC, WR> WriteOnlyDataCommand for PGPIO8BitInterface<BUS, DC, WR>
+impl<BUS, DC, WR> WriteOnlyDataCommand for PGpio8BitInterface<BUS, DC, WR>
 where
     BUS: OutputBus<Word = u8>,
     DC: OutputPin,
@@ -227,13 +227,13 @@ where
 /// All pins are supposed to be high-active, high for the D/C pin meaning "data" and the
 /// write-enable being pulled low before the setting of the bits and supposed to be sampled at a
 /// low to high edge.
-pub struct PGPIO16BitInterface<BUS, DC, WR> {
+pub struct PGpio16BitInterface<BUS, DC, WR> {
     bus: BUS,
     dc: DC,
     wr: WR,
 }
 
-impl<BUS, DC, WR> PGPIO16BitInterface<BUS, DC, WR>
+impl<BUS, DC, WR> PGpio16BitInterface<BUS, DC, WR>
 where
     BUS: OutputBus<Word = u16>,
     DC: OutputPin,
@@ -276,7 +276,7 @@ where
     }
 }
 
-impl<BUS, DC, WR> WriteOnlyDataCommand for PGPIO16BitInterface<BUS, DC, WR>
+impl<BUS, DC, WR> WriteOnlyDataCommand for PGpio16BitInterface<BUS, DC, WR>
 where
     BUS: OutputBus<Word = u16>,
     DC: OutputPin,

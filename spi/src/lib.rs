@@ -108,12 +108,12 @@ where
 /// SPI display interface.
 ///
 /// This combines the SPI peripheral and a data/command pin
-pub struct SPIInterface<SPI, DC> {
+pub struct SpiInterface<SPI, DC> {
     spi: SPI,
     dc: DC,
 }
 
-impl<SPI, DC> SPIInterface<SPI, DC> {
+impl<SPI, DC> SpiInterface<SPI, DC> {
     /// Create new SPI interface for communication with a display driver
     pub fn new(spi: SPI, dc: DC) -> Self {
         Self { spi, dc }
@@ -126,7 +126,7 @@ impl<SPI, DC> SPIInterface<SPI, DC> {
     }
 }
 
-impl<SPI, DC> WriteOnlyDataCommand for SPIInterface<SPI, DC>
+impl<SPI, DC> WriteOnlyDataCommand for SpiInterface<SPI, DC>
 where
     SPI: SpiDevice,
     DC: OutputPin,
