@@ -6,7 +6,7 @@ use embedded_hal_async::spi::SpiDevice;
 
 use display_interface::{AsyncWriteOnlyDataCommand, DataFormat, DisplayError};
 
-use crate::{SPIInterface, BUFFER_SIZE};
+use crate::{SpiInterface, BUFFER_SIZE};
 
 type Result = core::result::Result<(), DisplayError>;
 
@@ -116,7 +116,7 @@ where
     }
 }
 
-impl<SPI, DC> AsyncWriteOnlyDataCommand for SPIInterface<SPI, DC>
+impl<SPI, DC> AsyncWriteOnlyDataCommand for SpiInterface<SPI, DC>
 where
     SPI: SpiDevice,
     DC: OutputPin,
