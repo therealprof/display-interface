@@ -6,6 +6,7 @@ impl<I2C> AsyncWriteOnlyDataCommand for I2cInterface<I2C>
 where
     I2C: embedded_hal_async::i2c::I2c,
 {
+    #[inline]
     async fn send_commands(&mut self, cmds: DataFormat<'_>) -> Result<(), DisplayError> {
         // Copy over given commands to new aray to prefix with command identifier
         match cmds {
@@ -22,6 +23,7 @@ where
         }
     }
 
+    #[inline]
     async fn send_data(&mut self, buf: DataFormat<'_>) -> Result<(), DisplayError> {
         match buf {
             DataFormat::U8(slice) => {

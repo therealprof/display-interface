@@ -10,6 +10,7 @@ use crate::{SpiInterface, BUFFER_SIZE};
 
 type Result = core::result::Result<(), DisplayError>;
 
+#[inline]
 async fn send_u8<SPI>(spi: &mut SPI, words: DataFormat<'_>) -> Result
 where
     SPI: SpiDevice,
@@ -121,6 +122,7 @@ where
     SPI: SpiDevice,
     DC: OutputPin,
 {
+    #[inline]
     async fn send_commands(&mut self, cmds: DataFormat<'_>) -> Result {
         // 1 = data, 0 = command
         self.dc.set_low().map_err(|_| DisplayError::DCError)?;
@@ -129,6 +131,7 @@ where
         send_u8(&mut self.spi, cmds).await
     }
 
+    #[inline]
     async fn send_data(&mut self, buf: DataFormat<'_>) -> Result {
         // 1 = data, 0 = command
         self.dc.set_high().map_err(|_| DisplayError::DCError)?;

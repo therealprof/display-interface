@@ -15,6 +15,7 @@ pub struct I2cInterface<I2C> {
 
 impl<I2C> I2cInterface<I2C> {
     /// Create new I2C interface for communication with a display driver
+    #[inline]
     pub fn new(i2c: I2C, addr: u8, data_byte: u8) -> Self {
         Self {
             i2c,
@@ -25,6 +26,7 @@ impl<I2C> I2cInterface<I2C> {
 
     /// Consume the display interface and return
     /// the underlying peripheral driver
+    #[inline]
     pub fn release(self) -> I2C {
         self.i2c
     }
@@ -34,6 +36,7 @@ impl<I2C> WriteOnlyDataCommand for I2cInterface<I2C>
 where
     I2C: embedded_hal::i2c::I2c,
 {
+    #[inline]
     fn send_commands(&mut self, cmds: DataFormat<'_>) -> Result<(), DisplayError> {
         // Copy over given commands to new aray to prefix with command identifier
         match cmds {
@@ -49,6 +52,7 @@ where
         }
     }
 
+    #[inline]
     fn send_data(&mut self, buf: DataFormat<'_>) -> Result<(), DisplayError> {
         match buf {
             DataFormat::U8(slice) => {

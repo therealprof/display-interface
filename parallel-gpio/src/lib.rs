@@ -32,11 +32,13 @@ macro_rules! generic_bus {
             /// Creates a new bus. This does not change the state of the pins.
             ///
             /// The first pin in the tuple is the least significant bit.
+            #[inline]
             pub fn new(pins: ($($PX, )*)) -> Self {
                 Self { pins, last: None }
             }
 
             /// Consumes the bus and returns the pins. This does not change the state of the pins.
+            #[inline]
             pub fn release(self) -> ($($PX, )*) {
                 self.pins
             }
@@ -49,6 +51,7 @@ macro_rules! generic_bus {
         {
             type Word = $Word;
 
+            #[inline]
             fn set_value(&mut self, value: Self::Word) -> Result {
                 if self.last == Some(value) {
                     // It's quite common for multiple consecutive values to be identical, e.g. when filling or
@@ -87,6 +90,7 @@ macro_rules! generic_bus {
         where
             $($PX: OutputPin, )*
         {
+            #[inline]
             fn from(pins: ($($PX, )*)) -> Self {
                 Self::new(pins)
             }
@@ -156,16 +160,19 @@ where
     WR: OutputPin,
 {
     /// Create new parallel GPIO interface for communication with a display driver
+    #[inline]
     pub fn new(bus: BUS, dc: DC, wr: WR) -> Self {
         Self { bus, dc, wr }
     }
 
     /// Consume the display interface and return
     /// the bus and GPIO pins used by it
+    #[inline]
     pub fn release(self) -> (BUS, DC, WR) {
         (self.bus, self.dc, self.wr)
     }
 
+    #[inline]
     fn write_iter(&mut self, iter: impl Iterator<Item = u8>) -> Result {
         for value in iter {
             self.wr.set_low().map_err(|_| DisplayError::BusWriteError)?;
@@ -178,11 +185,13 @@ where
         Ok(())
     }
 
+    #[inline]
     fn write_pairs(&mut self, iter: impl Iterator<Item = [u8; 2]>) -> Result {
         use core::iter::once;
         self.write_iter(iter.flat_map(|[first, second]| once(first).chain(once(second))))
     }
 
+    #[inline]
     fn write_data(&mut self, data: DataFormat<'_>) -> Result {
         match data {
             DataFormat::U8(slice) => self.write_iter(slice.iter().copied()),
@@ -207,11 +216,13 @@ where
     DC: OutputPin,
     WR: OutputPin,
 {
+    #[inline]
     fn send_commands(&mut self, cmds: DataFormat<'_>) -> Result {
         self.dc.set_low().map_err(|_| DisplayError::DCError)?;
         self.write_data(cmds)
     }
 
+    #[inline]
     fn send_data(&mut self, buf: DataFormat<'_>) -> Result {
         self.dc.set_high().map_err(|_| DisplayError::DCError)?;
         self.write_data(buf)
@@ -240,16 +251,19 @@ where
     WR: OutputPin,
 {
     /// Create new parallel GPIO interface for communication with a display driver
+    #[inline]
     pub fn new(bus: BUS, dc: DC, wr: WR) -> Self {
         Self { bus, dc, wr }
     }
 
     /// Consume the display interface and return
     /// the bus and GPIO pins used by it
+    #[inline]
     pub fn release(self) -> (BUS, DC, WR) {
         (self.bus, self.dc, self.wr)
     }
 
+    #[inline]
     fn write_iter(&mut self, iter: impl Iterator<Item = u16>) -> Result {
         for value in iter {
             self.wr.set_low().map_err(|_| DisplayError::BusWriteError)?;
@@ -262,6 +276,7 @@ where
         Ok(())
     }
 
+    #[inline]
     fn write_data(&mut self, data: DataFormat<'_>) -> Result {
         match data {
             DataFormat::U8(slice) => self.write_iter(slice.iter().copied().map(u16::from)),
@@ -282,11 +297,13 @@ where
     DC: OutputPin,
     WR: OutputPin,
 {
+    #[inline]
     fn send_commands(&mut self, cmds: DataFormat<'_>) -> Result {
         self.dc.set_low().map_err(|_| DisplayError::DCError)?;
         self.write_data(cmds)
     }
 
+    #[inline]
     fn send_data(&mut self, buf: DataFormat<'_>) -> Result {
         self.dc.set_high().map_err(|_| DisplayError::DCError)?;
         self.write_data(buf)

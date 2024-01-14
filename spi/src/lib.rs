@@ -12,6 +12,7 @@ type Result = core::result::Result<(), DisplayError>;
 
 pub(crate) const BUFFER_SIZE: usize = 64;
 
+#[inline]
 fn send_u8<SPI>(spi: &mut SPI, words: DataFormat<'_>) -> Result
 where
     SPI: SpiDevice,
@@ -115,12 +116,14 @@ pub struct SpiInterface<SPI, DC> {
 
 impl<SPI, DC> SpiInterface<SPI, DC> {
     /// Create new SPI interface for communication with a display driver
+    #[inline]
     pub fn new(spi: SPI, dc: DC) -> Self {
         Self { spi, dc }
     }
 
     /// Consume the display interface and return
     /// the underlying peripheral driver and GPIO pins used by it
+    #[inline]
     pub fn release(self) -> (SPI, DC) {
         (self.spi, self.dc)
     }
@@ -131,6 +134,7 @@ where
     SPI: SpiDevice,
     DC: OutputPin,
 {
+    #[inline]
     fn send_commands(&mut self, cmds: DataFormat<'_>) -> Result {
         // 1 = data, 0 = command
         self.dc.set_low().map_err(|_| DisplayError::DCError)?;
@@ -139,6 +143,7 @@ where
         send_u8(&mut self.spi, cmds)
     }
 
+    #[inline]
     fn send_data(&mut self, buf: DataFormat<'_>) -> Result {
         // 1 = data, 0 = command
         self.dc.set_high().map_err(|_| DisplayError::DCError)?;
