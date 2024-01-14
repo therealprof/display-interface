@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## Added
+
+## Changed
+
+- **Breaking** lib: `{SPI, I2C}Interface, PGPIO{8, 16}BitInterface` is renamed to `{Spi, I2c}Interface, PGpio{8, 16}BitInterface`
 
 ## [v0.5.0] - 2023-01-12
 
@@ -16,17 +21,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - New `AsyncWriteOnlyDataCommand` trait.
 - i2c, spi: `async/await` support.
 - parallel-gpio: Added `Generic16BitBus`
-- parallel-gpio: Added `PGpio16BitInterface`
+- parallel-gpio: Added `PGPIO16BitInterface`
 - added `defmt-03` feature
 
 ## Changed
 
 - **Breaking** raised MSRV to 1.75
-- spi: `SpiInterface` now wraps objects that implement the `SpiDeviceWrite` trait from embedded-hal 1.0.0
-- spi: `SpiInterface` now wraps objects that implement the `SpiDeviceWrite` trait from embedded-hal-async 1.0.0
+- spi: `SPIInterface` now wraps objects that implement the `SpiDeviceWrite` trait from embedded-hal 1.0.0
+- spi: `SPIInterface` now wraps objects that implement the `SpiDeviceWrite` trait from embedded-hal-async 1.0.0
 - parallel-gpio: Fixed bug with fallible pins
 - **Breaking** parallel-gpio: `GenericxBitBus::new` is now infallible
-- **Breaking** lib: `{SPI, I2C}Interface, PGPIO{8, 16}BitInterface` is renamed to `{Spi, I2c}Interface, PGpio{8, 16}BitInterface`
 
 ## [v0.4.1] - 2021-05-10
 
