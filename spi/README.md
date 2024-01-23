@@ -4,6 +4,12 @@ This Rust crate contains a generic SPI implementation of a data/command
 interface for displays over any SPI driver implementing the `embedded-hal`/`embedded-hal-async`
 `SpiDevice` trait(s).
 
+## Crate features
+
+Additional features can be enabled by adding the following features to your Cargo.toml.
+
+- `async`: adds `embedded-hal-async` `SpiDevice` implementation.
+
 ## License
 
 Licensed under either of

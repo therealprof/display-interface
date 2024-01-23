@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## Changed
 
 - **Breaking** lib: `{SPI, I2C}Interface, PGPIO{8, 16}BitInterface` is renamed to `{Spi, I2c}Interface, PGpio{8, 16}BitInterface`
+- **Breaking** i2c, spi: asynchronous implementations require the `async` feature
+- simplified sync/async code by adding `maybe-async-cfg` crate to remove quasi-duplicate sync code
 
 ## [v0.5.0] - 2023-01-12
 

@@ -53,17 +53,7 @@ pub enum DataFormat<'a> {
     U16LEIter(&'a mut dyn Iterator<Item = u16>),
 }
 
-/// This trait implements a write-only interface for a display which has separate data and command
-/// modes. It is the responsibility of implementations to activate the correct mode in their
-/// implementation when corresponding method is called.
-pub trait WriteOnlyDataCommand {
-    /// Send a batch of commands to display
-    fn send_commands(&mut self, cmd: DataFormat<'_>) -> Result<(), DisplayError>;
-
-    /// Send pixel data to display
-    fn send_data(&mut self, buf: DataFormat<'_>) -> Result<(), DisplayError>;
-}
-
+#[maybe_async_cfg::maybe(sync(self = "WriteOnlyDataCommand"), async(keep_self))]
 /// This trait implements a write-only interface for a display which has separate data and command
 /// modes. It is the responsibility of implementations to activate the correct mode in their
 /// implementation when corresponding method is called.

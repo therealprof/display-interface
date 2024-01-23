@@ -4,6 +4,12 @@ This Rust crate contains a generic I2C implementation of a data/command
 interface for displays over any I2C driver implementing the `embedded-hal`/`embedded-hal-async`
 `i2c::I2c` trait(s).
 
+## Crate features
+
+Additional features can be enabled by adding the following features to your Cargo.toml.
+
+- `async`: adds `embedded-hal-async` `i2c::I2c` implementation.
+
 ## License
 
 Licensed under either of
