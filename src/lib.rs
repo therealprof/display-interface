@@ -12,7 +12,7 @@ pub mod prelude;
 
 /// A ubiquitous error type for all kinds of problems which could happen when communicating with a
 /// display
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq, Copy)]
 #[cfg_attr(feature = "defmt-03", derive(defmt::Format))]
 #[non_exhaustive]
 pub enum DisplayError {
